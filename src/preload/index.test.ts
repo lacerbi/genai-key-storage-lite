@@ -27,4 +27,19 @@ describe('createApiKeyManagerBridge', () => {
       bridge.deleteKey('openai');
       expect(mockedIpcRenderer.invoke).toHaveBeenCalledWith(IPCChannelNames.SECURE_API_KEY_DELETE, 'openai');
   });
+
+  it('should call invoke for isKeyStored', () => {
+      bridge.isKeyStored('openai');
+      expect(mockedIpcRenderer.invoke).toHaveBeenCalledWith(IPCChannelNames.SECURE_API_KEY_IS_STORED, 'openai');
+  });
+
+  it('should call invoke for getStoredProviderIds', () => {
+      bridge.getStoredProviderIds();
+      expect(mockedIpcRenderer.invoke).toHaveBeenCalledWith(IPCChannelNames.SECURE_API_KEY_GET_STORED_PROVIDERS);
+  });
+
+  it('should call invoke for getApiKeyDisplayInfo', () => {
+      bridge.getApiKeyDisplayInfo('openai');
+      expect(mockedIpcRenderer.invoke).toHaveBeenCalledWith(IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO, 'openai');
+  });
 });

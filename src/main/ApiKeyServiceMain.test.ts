@@ -133,6 +133,141 @@ describe('ApiKeyServiceMain', () => {
     });
   });
   
+  describe('isKeyStored', () => {
+    it('should return true if key metadata is loaded in memory', async () => {
+      // Manually set metadata as if it was loaded at startup
+      (service as any).loadedKeyMetadata.set('openai', { lastFourChars: 'xxxx' });
+      await expect(service.isKeyStored('openai')).resolves.toBe(true);
+      expect(mockedFsPromises.access).not.toHaveBeenCalled(); // Should not hit the disk
+    });
+
+    it('should return true if key file exists on disk but not in memory', async () => {
+      mockedFsPromises.access.mockResolvedValue(undefined);
+      // Mock readFile to simulate finding metadata in the file
+      mockedFsPromises.readFile.mockResolvedValue(JSON.stringify({ lastFourChars: 'yyyy' }));
+      await expect(service.isKeyStored('openai')).resolves.toBe(true);
+      expect(mockedFsPromises.access).toHaveBeenCalledWith(`${mockUserDataPath}/secure_api_keys/openai.json`);
+    });
+
+    it('should return false if key is not in memory and file does not exist', async () => {
+      mockedFsPromises.access.mockRejectedValue(new Error('ENOENT'));
+      await expect(service.isKeyStored('openai')).resolves.toBe(false);
+    });
+
+    it('should return true even if file exists but cannot be parsed', async () => {
+      mockedFsPromises.access.mockResolvedValue(undefined);
+      mockedFsPromises.readFile.mockResolvedValue('{ not valid json }');
+      await expect(service.isKeyStored('openai')).resolves.toBe(true);
+    });
+  });
+
+  describe('getStoredProviderIds', () => {
+    it('should return an array of provider IDs from loaded metadata', () => {
+      (service as any).loadedKeyMetadata.set('openai', { lastFourChars: 'xxxx' });
+      (service as any).loadedKeyMetadata.set('gemini', { lastFourChars: 'yyyy' });
+      expect(service.getStoredProviderIds()).toEqual(['openai', 'gemini']);
+    });
+
+    it('should return an empty array if no metadata is loaded', () => {
+      expect(service.getStoredProviderIds()).toEqual([]);
+    });
+  });
+
+  describe('loadAllKeysFromDisk (on instantiation)', () => {
+    it('should load metadata from valid key files', async () => {
+      mockedFsPromises.readdir.mockResolvedValue(['openai.json', 'gemini.json'] as any);
+      mockedFsPromises.readFile
+        .mockResolvedValueOnce(JSON.stringify({ lastFourChars: 'opai' }))
+        .mockResolvedValueOnce(JSON.stringify({ lastFourChars: 'mini' }));
+
+      const newService = new ApiKeyServiceMain(mockUserDataPath);
+      // Allow promises in constructor to resolve
+      await new Promise(process.nextTick);
+
+      expect(newService.getStoredProviderIds()).toEqual(['openai', 'gemini']);
+      const displayInfo = await newService.getApiKeyDisplayInfo('openai');
+      expect(displayInfo.lastFourChars).toBe('opai');
+    });
+
+    it('should handle and skip malformed JSON files', async () => {
+      mockedFsPromises.readdir.mockResolvedValue(['openai.json', 'corrupted.json'] as any);
+      mockedFsPromises.readFile
+        .mockResolvedValueOnce(JSON.stringify({ lastFourChars: 'opai' }))
+        .mockResolvedValueOnce('this is not json');
+
+      const newService = new ApiKeyServiceMain(mockUserDataPath);
+      await new Promise(process.nextTick);
+
+      expect(newService.getStoredProviderIds()).toEqual(['openai']);
+    });
+
+    it('should skip unknown provider files', async () => {
+      mockedFsPromises.readdir.mockResolvedValue(['openai.json', 'unknown-provider.json'] as any);
+      mockedFsPromises.readFile.mockResolvedValueOnce(JSON.stringify({ lastFourChars: 'opai' }));
+
+      const newService = new ApiKeyServiceMain(mockUserDataPath);
+      await new Promise(process.nextTick);
+
+      expect(newService.getStoredProviderIds()).toEqual(['openai']);
+    });
+
+    it('should handle files without lastFourChars metadata', async () => {
+      mockedFsPromises.readdir.mockResolvedValue(['openai.json'] as any);
+      mockedFsPromises.readFile.mockResolvedValueOnce(JSON.stringify({ encryptedKey: 'somekey' }));
+
+      const newService = new ApiKeyServiceMain(mockUserDataPath);
+      await new Promise(process.nextTick);
+
+      expect(newService.getStoredProviderIds()).toEqual([]);
+    });
+
+    it('should continue loading other keys when one file fails', async () => {
+      mockedFsPromises.readdir.mockResolvedValue(['openai.json', 'anthropic.json', 'gemini.json'] as any);
+      mockedFsPromises.readFile
+        .mockResolvedValueOnce(JSON.stringify({ lastFourChars: 'opai' }))
+        .mockRejectedValueOnce(new Error('File read error'))
+        .mockResolvedValueOnce(JSON.stringify({ lastFourChars: 'mini' }));
+
+      const newService = new ApiKeyServiceMain(mockUserDataPath);
+      await new Promise(process.nextTick);
+
+      expect(newService.getStoredProviderIds()).toEqual(['openai', 'gemini']);
+    });
+  });
+
+  describe('withDecryptedKey - additional error cases', () => {
+    it('should throw ApiKeyStorageError if key file is corrupted', async () => {
+      mockedFsPromises.readFile.mockResolvedValue('{ not json }');
+      mockedFsPromises.access.mockResolvedValue(undefined); // File exists
+      const operation = jest.fn();
+      await expect(service.withDecryptedKey('openai', operation)).rejects.toThrow(ApiKeyStorageError);
+      expect(operation).not.toHaveBeenCalled();
+    });
+
+    it('should throw ApiKeyStorageError if safeStorage is unavailable during decryption', async () => {
+      const fileContent = JSON.stringify({ encryptedKey: 'some-key', lastFourChars: 'xxxx' });
+      mockedFsPromises.readFile.mockResolvedValue(fileContent);
+      mockedFsPromises.access.mockResolvedValue(undefined);
+      mockedSafeStorage.isEncryptionAvailable.mockReturnValue(false);
+      
+      const operation = jest.fn();
+      await expect(service.withDecryptedKey('openai', operation)).rejects.toThrow(ApiKeyStorageError);
+      expect(operation).not.toHaveBeenCalled();
+    });
+
+    it('should throw ApiKeyStorageError if decrypted key has invalid format', async () => {
+      const fileContent = JSON.stringify({ encryptedKey: 'some-key', lastFourChars: 'xxxx' });
+      mockedFsPromises.readFile.mockResolvedValue(fileContent);
+      mockedFsPromises.access.mockResolvedValue(undefined);
+      mockedSafeStorage.isEncryptionAvailable.mockReturnValue(true);
+      mockedSafeStorage.decryptString.mockReturnValue('invalid-api-key-format');
+      
+      const operation = jest.fn();
+      await expect(service.withDecryptedKey('openai', operation)).rejects.toThrow(ApiKeyStorageError);
+      expect(operation).not.toHaveBeenCalled();
+    });
+  });
+
   describe('validateAndGetSecurePath', () => {
     it('should throw on path traversal attempt', () => {
       // This is an internal method, but its security is critical to test.
@@ -140,6 +275,19 @@ describe('ApiKeyServiceMain', () => {
       const internalService = service as any;
       const maliciousProviderId = '../other-folder/key';
       expect(() => internalService.validateAndGetSecurePath(maliciousProviderId)).toThrow(ApiKeyStorageError);
+    });
+
+    it('should throw on invalid characters in provider ID', () => {
+      const internalService = service as any;
+      const invalidProviderId = 'provider@id';
+      expect(() => internalService.validateAndGetSecurePath(invalidProviderId)).toThrow(ApiKeyStorageError);
+    });
+
+    it('should return valid path for legitimate provider ID', () => {
+      const internalService = service as any;
+      const validProviderId = 'openai';
+      const result = internalService.validateAndGetSecurePath(validProviderId);
+      expect(result).toBe(`${mockUserDataPath}/secure_api_keys/openai.json`);
     });
   });
 });

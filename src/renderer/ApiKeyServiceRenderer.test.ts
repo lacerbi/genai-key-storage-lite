@@ -47,4 +47,31 @@ describe('ApiKeyServiceRenderer', () => {
     expect(mockBridge.getApiKeyDisplayInfo).toHaveBeenCalledWith('openai');
     expect(result).toEqual(displayInfo);
   });
+
+  describe('Synchronous Helpers', () => {
+    it('getAvailableProviders should return all provider IDs from the provider service', () => {
+      const providers = service.getAvailableProviders();
+      expect(providers).toEqual(expect.arrayContaining(['openai', 'gemini', 'anthropic', 'mistral']));
+      expect(providers.length).toBe(4);
+    });
+
+    it('validateApiKeyFormat should correctly validate a key format', () => {
+      // Test one provider as an example, since provider-specific tests exist elsewhere
+      const validKey = `sk-${'a'.repeat(32)}`;
+      const invalidKey = 'invalid-key';
+      expect(service.validateApiKeyFormat('openai', validKey)).toBe(true);
+      expect(service.validateApiKeyFormat('openai', invalidKey)).toBe(false);
+    });
+
+    it('getProvider should return the correct provider validator instance', () => {
+      const provider = service.getProvider('openai');
+      expect(provider).toBeDefined();
+      expect(provider?.providerId).toBe('openai');
+    });
+
+    it('getProvider should return undefined for non-existent provider', () => {
+      const provider = service.getProvider('nonexistent' as any);
+      expect(provider).toBeUndefined();
+    });
+  });
 });
