@@ -256,7 +256,7 @@ This file defines our new module. Create `genai-key-storage-lite/package.json` w
 ```json
 {
   "name": "genai-key-storage-lite",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A secure API key storage module for Electron applications using native OS credential stores.",
   "main": "./dist/main/index.js",
   "types": "./dist/main/index.d.ts",
@@ -321,7 +321,7 @@ After publishing the package (or linking it locally), Athanor's code would be si
 
 2.  **Add the new dependency to Athanor's `package.json`:**
 
-    - `"genai-key-storage-lite": "^1.0.0"`
+    - `"genai-key-storage-lite": "^0.1.0"`
 
 3.  **Modify Athanor's `electron/main.ts`:**
 
