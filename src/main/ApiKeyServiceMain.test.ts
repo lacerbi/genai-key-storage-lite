@@ -68,7 +68,16 @@ describe('ApiKeyServiceMain', () => {
         encryptedKey: encryptedKey.toString('base64'),
         lastFourChars: lastFour,
       });
-      expect(mockedFsPromises.writeFile).toHaveBeenCalledWith(expectedPath, expectedData);
+      // The writeFileSecurely method handles platform differences internally
+      // We just check that writeFile was called with the correct path and data
+      expect(mockedFsPromises.writeFile).toHaveBeenCalled();
+      const writeFileCall = mockedFsPromises.writeFile.mock.calls[0];
+      expect(writeFileCall[0]).toBe(expectedPath);
+      expect(writeFileCall[1]).toBe(expectedData);
+      // Platform-specific: Unix has mode parameter, Windows doesn't
+      if (writeFileCall[2]) {
+        expect(writeFileCall[2]).toEqual({ mode: 0o600 });
+      }
     });
     
     it('should throw if API key format is invalid', async () => {

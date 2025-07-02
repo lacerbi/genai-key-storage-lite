@@ -5,6 +5,7 @@
 import { safeStorage, app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { ApiProvider, ApiKeyStorageError, ProviderService, validateProviderOrThrow } from '../common';
 
 /**
@@ -90,7 +91,7 @@ export class ApiKeyServiceMain {
       
       // Save data to JSON file
       const filePath = this.getFilePath(providerId);
-      await fs.promises.writeFile(filePath, JSON.stringify(dataToStore));
+      await this.writeFileSecurely(filePath, JSON.stringify(dataToStore));
       
       // Update metadata in memory
       this.loadedKeyMetadata.set(providerId, { lastFourChars });
@@ -419,5 +420,30 @@ export class ApiKeyServiceMain {
     }
 
     return normalizedPath;
+  }
+
+  /**
+   * Writes data to a file with platform-appropriate security settings
+   * 
+   * On Unix-like systems: Sets file permissions to 0600 (owner read/write only)
+   * On Windows: The mode parameter is ignored by Node.js, but the file inherits
+   * the security settings of the parent directory, which should be the user's
+   * app data directory with appropriate ACLs
+   * 
+   * @param filePath Path to write the file
+   * @param data Data to write
+   * @private
+   */
+  private async writeFileSecurely(filePath: string, data: string): Promise<void> {
+    if (os.platform() === 'win32') {
+      // On Windows, Node.js ignores the mode parameter
+      // Files inherit parent directory permissions (user's AppData)
+      // For additional security, we could use node-windows or child_process
+      // to set ACLs, but that adds complexity and dependencies
+      await fs.promises.writeFile(filePath, data);
+    } else {
+      // On Unix-like systems, set restrictive permissions
+      await fs.promises.writeFile(filePath, data, { mode: 0o600 });
+    }
   }
 }
