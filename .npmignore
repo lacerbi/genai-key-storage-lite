@@ -1,0 +1,41 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Test files
+*.test.js
+*.test.d.ts
+__tests__/
+jest.config.js
+coverage/
+
+# Config files
+tsconfig.json
+.eslintrc*
+.prettierrc*
+
+# Development files
+.github/
+.vscode/
+.idea/
+*.log
+.DS_Store
+log.txt
+
+# Documentation source
+docs/
+examples/
+PORTING.md
+CLAUDE.md
+
+# Project-specific
+.ath_materials/
+.athignore
+.claude/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Keep built files in dist/
+!dist/

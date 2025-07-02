@@ -2,6 +2,21 @@
   "name": "genai-key-storage-lite",
   "version": "0.1.0",
   "description": "A secure API key storage module for Electron generative AI based applications using native OS credential stores.",
+  "keywords": ["electron", "security", "api-keys", "storage", "encryption", "ai", "genai"],
+  "author": "Luigi Acerbi <luigi.acerbi@gmail.com>",
+  "license": "MIT",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/lacerbi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lacerbi/genai-key-storage-lite.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lacerbi/genai-key-storage-lite/issues"
+  },
+  "homepage": "https://github.com/lacerbi/genai-key-storage-lite#readme",
   "main": "./dist/main/index.js",
   "types": "./dist/main/index.d.ts",
   "exports": {
