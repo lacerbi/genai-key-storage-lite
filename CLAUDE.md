@@ -6,12 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Development:**
 - `npm run build` - Build the TypeScript library to `dist/` directory
-- No test scripts defined - this is a library module
+- `npm test` - Run comprehensive Jest test suite (32 tests across 6 test suites)
 
 **Project Structure:**
 - TypeScript library with exports for `main`, `renderer`, and `preload` processes
 - Targets ES2021 with CommonJS modules
 - Strict TypeScript configuration with declarations
+- Jest testing framework with TypeScript support
 
 ## Architecture Overview
 
@@ -145,11 +146,24 @@ const apiKeyService = new ApiKeyServiceRenderer(
 2. Create provider validator implementing `IApiProviderValidator`
 3. Register provider in `ProviderService.registerBuiltInProviders()`
 4. Export provider class from `src/common/providers/index.ts`
+5. Add test cases for the new provider in `ProviderService.test.ts`
 
 **Testing:**
-- No test framework currently configured
-- Manual testing recommended for OS-level encryption features
-- Test across different OS platforms (macOS, Windows, Linux)
+- **Jest test framework** configured with TypeScript support (`ts-jest`)
+- **Comprehensive test coverage** with 32 tests across all modules:
+  - `src/common/` - Core utilities and provider validation (13 tests)
+  - `src/main/` - ApiKeyServiceMain security and IPC handlers (12 tests) 
+  - `src/renderer/` - Client-side service functionality (5 tests)
+  - `src/preload/` - IPC bridge communication (2 tests)
+- **Proper Electron mocking** for `safeStorage`, `ipcMain`, `ipcRenderer`
+- **Security testing** including path traversal prevention
+- **Error handling validation** across all IPC boundaries
+- Test files co-located with source: `*.test.ts`
+
+**Running Tests:**
+- `npm test` - Run all tests
+- `npm test <specific-file>` - Run specific test file
+- Tests include proper mocking of Electron APIs and file system operations
 
 **Path Security:**
 - Always use `validateAndGetSecurePath()` for file operations
