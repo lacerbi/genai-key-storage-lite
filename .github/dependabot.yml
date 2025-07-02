@@ -1,0 +1,56 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    reviewers:
+      - "@maintainers"
+    assignees:
+      - "@maintainers"
+    labels:
+      - "dependencies"
+      - "automated"
+    # Group development dependencies together
+    groups:
+      dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "typescript"
+          - "jest"
+          - "ts-jest"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Electron updates separately due to potential breaking changes
+      electron:
+        patterns:
+          - "electron"
+        update-types:
+          - "minor"
+    # Ignore specific updates if needed
+    ignore:
+      # Ignore major version updates for Electron (require manual review)
+      - dependency-name: "electron"
+        update-types: ["version-update:semver-major"]
+
+  # Enable security updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "github-actions"
+      - "automated"

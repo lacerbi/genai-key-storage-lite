@@ -1,0 +1,308 @@
+name: Release Tests
+
+on:
+  release:
+    types: [published, created]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to test (optional)'
+        required: false
+        type: string
+
+jobs:
+  comprehensive-test:
+    name: Comprehensive Release Tests
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04, windows-2019, windows-2022, macos-11, macos-12, macos-13]
+        node-version: [18.12.0, 18.x, 20.9.0, 20.x, 22.0.0, 22.x]
+        exclude:
+          # Exclude some combinations to reduce build time while maintaining good coverage
+          - os: ubuntu-20.04
+            node-version: 22.x
+          - os: windows-2019
+            node-version: 22.x
+          - os: macos-11
+            node-version: 22.x
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run comprehensive build
+        run: npm run build
+        
+      - name: Run all tests
+        run: npm test -- --verbose --coverage
+        env:
+          CI: true
+          
+      - name: Test package integrity
+        run: |
+          # Verify all expected files are built
+          ls -la dist/
+          
+          # Test TypeScript declarations
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            
+            function checkDts(dir) {
+              const items = fs.readdirSync(dir, { withFileTypes: true });
+              for (const item of items) {
+                if (item.isDirectory()) {
+                  checkDts(path.join(dir, item.name));
+                } else if (item.name.endsWith('.d.ts')) {
+                  const content = fs.readFileSync(path.join(dir, item.name), 'utf8');
+                  if (content.length === 0) {
+                    throw new Error('Empty .d.ts file: ' + path.join(dir, item.name));
+                  }
+                }
+              }
+            }
+            
+            checkDts('dist');
+            console.log('✅ All TypeScript declaration files are valid');
+          "
+
+  electron-matrix-test:
+    name: Electron Compatibility Matrix
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        electron-version: [
+          "25.0.0", "25.9.8",  # Electron 25 LTS range
+          "26.0.0", "26.6.10", # Electron 26 range  
+          "27.0.0", "27.3.11", # Electron 27 range
+          "28.0.0", "28.3.3",  # Electron 28 range
+          "29.0.0", "29.4.6",  # Electron 29 range
+          "30.0.0"             # Latest Electron 30
+        ]
+        node-version: ["20.x"]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          
+      - name: Install dependencies (without Electron)
+        run: |
+          # Install without the default Electron version
+          npm ci --ignore-scripts
+          
+      - name: Install specific Electron version
+        run: |
+          npm install --save-dev electron@${{ matrix.electron-version }}
+          
+      - name: Display Electron version info
+        run: |
+          npx electron --version
+          node -e "console.log('Node in Electron:', process.versions.node)"
+        continue-on-error: true
+        
+      - name: Run build with specific Electron
+        run: npm run build
+        
+      - name: Run tests with specific Electron
+        run: npm test
+        env:
+          CI: true
+          ELECTRON_VERSION: ${{ matrix.electron-version }}
+
+  performance-benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build package
+        run: npm run build
+        
+      - name: Run performance tests
+        run: |
+          # Create a simple performance test
+          node -e "
+            const { performance } = require('perf_hooks');
+            
+            // Test import performance
+            const start = performance.now();
+            const main = require('./dist/main/index.js');
+            const renderer = require('./dist/renderer/index.js');
+            const preload = require('./dist/preload/index.js');
+            const importTime = performance.now() - start;
+            
+            console.log('📊 Performance Metrics:');
+            console.log('  Import time:', importTime.toFixed(2), 'ms');
+            
+            // Test basic validation performance
+            if (renderer.ApiKeyServiceRenderer) {
+              const testStart = performance.now();
+              // Mock bridge for testing
+              const mockBridge = {
+                storeKey: () => Promise.resolve({ success: true }),
+                deleteKey: () => Promise.resolve({ success: true }),
+                isKeyStored: () => Promise.resolve(false),
+                getStoredProviderIds: () => Promise.resolve([]),
+                getApiKeyDisplayInfo: () => Promise.resolve({ isStored: false })
+              };
+              
+              const service = new renderer.ApiKeyServiceRenderer(mockBridge);
+              
+              // Test validation performance
+              const validationStart = performance.now();
+              for (let i = 0; i < 1000; i++) {
+                service.validateApiKeyFormat('openai', 'sk-test123456789012345678901234567890');
+              }
+              const validationTime = performance.now() - validationStart;
+              
+              console.log('  1000 validations:', validationTime.toFixed(2), 'ms');
+              console.log('  Avg per validation:', (validationTime / 1000).toFixed(3), 'ms');
+            }
+            
+            if (importTime > 100) {
+              console.warn('⚠️  Import time is slower than expected');
+              process.exit(1);
+            }
+            
+            console.log('✅ Performance benchmarks passed');
+          "
+
+  security-deep-scan:
+    name: Deep Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run comprehensive security audit
+        run: |
+          echo "🔍 Running comprehensive security audit..."
+          
+          # Check for security issues in dependencies
+          npm audit --audit-level=low
+          
+          # Check for potential security issues in code
+          echo "Checking for hardcoded secrets..."
+          if grep -r -i "password\|secret\|key.*=" src/ --include="*.ts" --include="*.js" | grep -v "test" | grep -v "mock"; then
+            echo "⚠️  Potential hardcoded secrets found"
+          else
+            echo "✅ No hardcoded secrets detected"
+          fi
+          
+          # Check for unsafe practices
+          echo "Checking for unsafe practices..."
+          if grep -r "eval\|Function\|setTimeout.*string" src/ --include="*.ts" --include="*.js" | grep -v "test"; then
+            echo "⚠️  Potentially unsafe code patterns found"
+          else
+            echo "✅ No unsafe code patterns detected"
+          fi
+          
+          # Check file permissions and structure
+          echo "Checking file structure security..."
+          find src/ -type f \( -name "*.ts" -o -name "*.js" \) -exec file {} \; | grep -v "text" && {
+            echo "⚠️  Non-text files found in source directory"
+            exit 1
+          } || echo "✅ All source files are text files"
+
+  release-validation:
+    name: Release Package Validation
+    runs-on: ubuntu-latest
+    needs: [comprehensive-test, electron-matrix-test, performance-benchmark, security-deep-scan]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build final package
+        run: npm run build
+        
+      - name: Create package tarball
+        run: npm pack
+        
+      - name: Test package installation from tarball
+        run: |
+          # Create test environment
+          mkdir -p /tmp/release-test
+          cd /tmp/release-test
+          npm init -y
+          
+          # Install from the built tarball
+          npm install ${{ github.workspace }}/genai-key-storage-lite-*.tgz
+          
+          # Test that everything works
+          node -e "
+            const main = require('genai-key-storage-lite');
+            const renderer = require('genai-key-storage-lite/renderer');
+            const preload = require('genai-key-storage-lite/preload');
+            
+            console.log('Main exports:', Object.keys(main));
+            console.log('Renderer exports:', Object.keys(renderer));
+            console.log('Preload exports:', Object.keys(preload));
+            
+            if (!main.ApiKeyServiceMain || !renderer.ApiKeyServiceRenderer || !preload.createApiKeyManagerBridge) {
+              throw new Error('Missing expected exports');
+            }
+            
+            console.log('✅ Release package validation passed');
+          "
+          
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: genai-key-storage-lite-*.tgz
+          retention-days: 30

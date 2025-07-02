@@ -1,0 +1,177 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-discussion"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide as much detail as possible.
+
+  - type: checkboxes
+    id: pre-checks
+    attributes:
+      label: Pre-submission Checks
+      description: Please confirm you have completed these steps
+      options:
+        - label: I have searched existing issues and discussions to ensure this is not a duplicate
+          required: true
+        - label: I have read the documentation to confirm this feature doesn't already exist
+          required: true
+        - label: This feature request is within the scope of this project (secure API key storage for Electron apps)
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What use case does it address?
+      placeholder: "I'm frustrated when... I need to... but currently..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your ideal solution to the problem
+      placeholder: "I would like to be able to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Describe any alternative solutions or workarounds you've considered
+    validations:
+      required: false
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - "New API method/functionality"
+        - "Performance improvement"
+        - "Security enhancement"
+        - "Developer experience improvement"
+        - "Platform/OS support"
+        - "Integration with external service"
+        - "Documentation improvement"
+        - "Other (specify in description)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How important is this feature to you?
+      options:
+        - "Nice to have"
+        - "Would be helpful"
+        - "Important for my use case"
+        - "Critical for my project"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: breaking-change
+    attributes:
+      label: Breaking Change
+      description: Would this feature require breaking changes to the current API?
+      options:
+        - "No - Backward compatible addition"
+        - "Maybe - Might affect existing behavior"
+        - "Yes - Would require breaking changes"
+        - "Unsure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-design
+    attributes:
+      label: API Design (if applicable)
+      description: If this involves new APIs, show what you'd like the interface to look like
+      render: typescript
+      placeholder: |
+        // Example API design
+        interface NewFeature {
+          newMethod(param: string): Promise<Result>;
+        }
+        
+        // Usage example
+        const service = new ApiKeyServiceMain(userDataPath);
+        const result = await service.newMethod('example');
+    validations:
+      required: false
+
+  - type: textarea
+    id: implementation-ideas
+    attributes:
+      label: Implementation Ideas
+      description: Do you have any ideas about how this could be implemented?
+      placeholder: "This could potentially be implemented by..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: security-considerations
+    attributes:
+      label: Security Considerations
+      description: Security-related aspects to consider (check all that apply)
+      options:
+        - label: This feature handles sensitive data (API keys, passwords, etc.)
+        - label: This feature involves file system operations
+        - label: This feature involves network communications
+        - label: This feature could affect the security model
+        - label: No security implications
+
+  - type: checkboxes
+    id: platform-support
+    attributes:
+      label: Platform Support
+      description: Which platforms should this feature support? (check all that apply)
+      options:
+        - label: Windows
+        - label: macOS
+        - label: Linux
+        - label: All platforms (platform-agnostic)
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Detailed Use Case
+      description: |
+        Provide a detailed example of how you would use this feature.
+        Include context about your application and why existing alternatives don't work.
+      placeholder: |
+        In my Electron application, I need to...
+        Currently I have to...
+        With this feature, I could instead...
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context, mockups, references to similar features in other libraries, etc.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to help implement this feature?
+      options:
+        - label: I would be willing to submit a pull request to implement this feature
+        - label: I would be willing to help with design and review
+        - label: I would be willing to help with testing and documentation
+        - label: I can provide feedback during development
