@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lacerbi/genai-key-storage-lite.git"
+    "url": "git+https://github.com/lacerbi/genai-key-storage-lite.git"
   },
   "bugs": {
     "url": "https://github.com/lacerbi/genai-key-storage-lite/issues"
