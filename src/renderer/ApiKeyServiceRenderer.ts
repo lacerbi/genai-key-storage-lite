@@ -8,6 +8,17 @@ import {
   ProviderService,
 } from '../common';
 
+// Define an interface for the bridge to ensure type safety
+export interface IApiKeyManagerBridge {
+  storeKey(providerId: string, apiKey: string): Promise<{ success: boolean }>;
+  deleteKey(providerId: string): Promise<{ success: boolean }>;
+  isKeyStored(providerId: string): Promise<boolean>;
+  getStoredProviderIds(): Promise<ApiProvider[]>;
+  getApiKeyDisplayInfo(
+    providerId: string
+  ): Promise<{ isStored: boolean; lastFourChars?: string }>;
+}
+
 /**
  * Renderer-side client service for secure API key management
  *
@@ -22,24 +33,23 @@ import {
  */
 export class ApiKeyServiceRenderer {
   private providerService: ProviderService;
-  private bridge: typeof window.electronBridge.secureApiKeyManager;
+  private bridge: IApiKeyManagerBridge;
 
   /**
-   * Creates a new ApiKeyServiceRenderer instance
-   *
-   * @throws ApiKeyStorageError if the preload bridge is not available
+   * Creates a new ApiKeyServiceRenderer instance.
+   * @param bridge The API key manager bridge object exposed from the preload script.
+   * @throws ApiKeyStorageError if the bridge is not provided.
    */
-  constructor() {
+  constructor(bridge: IApiKeyManagerBridge) {
     this.providerService = new ProviderService();
 
-    // Ensure the preload bridge is available
-    if (!window.electronBridge?.secureApiKeyManager) {
+    if (!bridge) {
       throw new ApiKeyStorageError(
-        'Secure API key bridge is not available. This may indicate a preload script issue.'
+        'Secure API key bridge is not available. Ensure it is passed to the constructor.'
       );
     }
 
-    this.bridge = window.electronBridge.secureApiKeyManager;
+    this.bridge = bridge;
   }
 
   /**

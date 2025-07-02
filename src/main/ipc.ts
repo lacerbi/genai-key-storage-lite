@@ -2,8 +2,12 @@
 // Handles storage, retrieval, deletion, and status checking with proper error propagation.
 
 import { ipcMain } from 'electron';
-import { ApiKeyServiceMain } from '../modules/secure-api-storage/main';
-import { IPCChannelNames, StoreApiKeyPayload, ApiKeyStorageError } from '../modules/secure-api-storage/common';
+import type { ApiKeyServiceMain } from './ApiKeyServiceMain';
+import {
+  IPCChannelNames,
+  StoreApiKeyPayload,
+  ApiKeyStorageError,
+} from '../common';
 
 /**
  * Registers IPC handlers for secure API key operations
