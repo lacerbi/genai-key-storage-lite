@@ -28,6 +28,7 @@ jest.mock('fs', () => ({
 import { ApiKeyServiceMain } from './ApiKeyServiceMain';
 import { safeStorage } from 'electron';
 import * as fs from 'fs';
+import * as path from 'path';
 import { ApiKeyStorageError } from '../common';
 
 describe('ApiKeyServiceMain', () => {
@@ -146,7 +147,7 @@ describe('ApiKeyServiceMain', () => {
       // Mock readFile to simulate finding metadata in the file
       mockedFsPromises.readFile.mockResolvedValue(JSON.stringify({ lastFourChars: 'yyyy' }));
       await expect(service.isKeyStored('openai')).resolves.toBe(true);
-      expect(mockedFsPromises.access).toHaveBeenCalledWith(`${mockUserDataPath}/secure_api_keys/openai.json`);
+      expect(mockedFsPromises.access).toHaveBeenCalledWith(path.join(mockUserDataPath, 'secure_api_keys', 'openai.json'));
     });
 
     it('should return false if key is not in memory and file does not exist', async () => {
@@ -287,7 +288,7 @@ describe('ApiKeyServiceMain', () => {
       const internalService = service as any;
       const validProviderId = 'openai';
       const result = internalService.validateAndGetSecurePath(validProviderId);
-      expect(result).toBe(`${mockUserDataPath}/secure_api_keys/openai.json`);
+      expect(result).toBe(path.join(mockUserDataPath, 'secure_api_keys', 'openai.json'));
     });
   });
 });
