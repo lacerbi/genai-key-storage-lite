@@ -1,93 +1,22 @@
-FAIL src/main/ApiKeyServiceMain.test.ts (6.859 s)
-  ● Console
-
-    console.log
-      Found 0 encrypted API key files
-
-      at ApiKeyServiceMain.loadAllKeysFromDisk (src/main/ApiKeyServiceMain.ts:246:15)
-
-    console.log
-      Successfully loaded metadata for 0 API keys
-
-      at ApiKeyServiceMain.loadAllKeysFromDisk (src/main/ApiKeyServiceMain.ts:277:15)
-
-    console.log
-      Found 0 encrypted API key files
-
-      at ApiKeyServiceMain.loadAllKeysFromDisk (src/main/ApiKeyServiceMain.ts:246:15)
-
-    console.log
-      Successfully loaded metadata for 0 API keys
-
-      at ApiKeyServiceMain.loadAllKeysFromDisk (src/main/ApiKeyServiceMain.ts:277:15)
-
-    console.log
-      API key stored successfully for provider: openai
-
-      at ApiKeyServiceMain.storeKey (src/main/ApiKeyServiceMain.ts:98:15)
-
-    console.log
-      Found 0 encrypted API key files
-
-    Number of calls: 1
-
-      69 |         lastFourChars: lastFour,
-      70 |       });
-    > 71 |       expect(mockedFsPromises.writeFile).toHaveBeenCalledWith(expectedPath, expectedData);
-         |                                          ^
-      72 |     });
-      73 |     
-      74 |     it('should throw if API key format is invalid', async () => {
-
-      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:71:42)
-
-  ● ApiKeyServiceMain › withDecryptedKey › should decrypt and provide key to the callback
+  ● ApiKeyServiceMain › should ensure storage directory exists on instantiation
 
     expect(jest.fn()).toHaveBeenCalledWith(...expected)
 
-    Expected: "/mock/user/data/secure_api_keys/openai.json", "utf-8"
-    Received: "\\mock\\user\\data\\secure_api_keys\\openai.json", "utf-8"
+    - Expected
+    + Received
+
+    - "/mock/user/data/secure_api_keys",
+    + "\\mock\\user\\data\\secure_api_keys",
+      {"recursive": true},
 
     Number of calls: 1
 
-       98 |       
-       99 |       expect(result).toBe('success');
-    > 100 |       expect(mockedFsPromises.readFile).toHaveBeenCalledWith(`${mockUserDataPath}/secure_api_keys/openai.json`, 'utf-8');
-          |                                         ^
-      101 |       expect(mockedSafeStorage.decryptString).toHaveBeenCalled();
-      102 |       expect(operation).toHaveBeenCalledWith(apiKey);
-      103 |     });
+      48 |   
+      49 |   it('should ensure storage directory exists on instantiation', () => {
+    > 50 |     expect(mockedFs.mkdirSync).toHaveBeenCalledWith(`${mockUserDataPath}/secure_api_keys`, { recursive: true });
+         |                                ^
+      51 |   });
+      52 |
+      53 |   describe('storeKey', () => {
 
-      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:100:41)
-
-  ● ApiKeyServiceMain › deleteKey › should delete a key file
-
-    expect(jest.fn()).toHaveBeenCalledWith(...expected)
-
-    Expected: "/mock/user/data/secure_api_keys/openai.json"
-    Received: "\\mock\\user\\data\\secure_api_keys\\openai.json"
-
-    Number of calls: 1
-
-      113 |       await service.deleteKey('openai');
-      114 |       const expectedPath = `${mockUserDataPath}/secure_api_keys/openai.json`;
-    > 115 |       expect(mockedFsPromises.unlink).toHaveBeenCalledWith(expectedPath);
-          |                                       ^
-      116 |     });
-      117 |   });
-      118 |
-
-      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:115:39)
-
-PASS src/preload/index.test.ts
-PASS src/common/providers/ProviderService.test.ts
-PASS src/common/providers/MistralProvider.test.ts
-PASS src/common/providers/GeminiProvider.test.ts
-PASS src/common/providers/AnthropicProvider.test.ts
-PASS src/common/providers/OpenAIProvider.test.ts
-PASS src/common/errors.test.ts
-
-Test Suites: 1 failed, 9 passed, 10 total
-Tests:       4 failed, 110 passed, 114 total
-Snapshots:   0 total
-Time:        9.658 s
+      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:50:32)

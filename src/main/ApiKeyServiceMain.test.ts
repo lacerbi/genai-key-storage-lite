@@ -47,7 +47,7 @@ describe('ApiKeyServiceMain', () => {
   });
   
   it('should ensure storage directory exists on instantiation', () => {
-    expect(mockedFs.mkdirSync).toHaveBeenCalledWith(`${mockUserDataPath}/secure_api_keys`, { recursive: true });
+    expect(mockedFs.mkdirSync).toHaveBeenCalledWith(path.join(mockUserDataPath, 'secure_api_keys'), { recursive: true });
   });
 
   describe('storeKey', () => {
