@@ -7,6 +7,11 @@
 export type ApiProvider = 'openai' | 'anthropic' | 'gemini' | 'mistral';
 
 /**
+ * A constant array of valid API provider IDs.
+ */
+export const VALID_PROVIDERS: ApiProvider[] = ['openai', 'anthropic', 'gemini', 'mistral'];
+
+/**
  * Payload structure for storing API keys via IPC
  */
 export interface StoreApiKeyPayload {

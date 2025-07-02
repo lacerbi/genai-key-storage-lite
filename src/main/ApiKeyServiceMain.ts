@@ -5,7 +5,7 @@
 import { safeStorage, app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ApiProvider, ApiKeyStorageError, ProviderService } from '../common';
+import { ApiProvider, ApiKeyStorageError, ProviderService, validateProviderOrThrow } from '../common';
 
 /**
  * Metadata stored for each API key without the key itself
@@ -63,6 +63,7 @@ export class ApiKeyServiceMain {
    * @throws ApiKeyStorageError if validation fails or encryption is unavailable
    */
   async storeKey(providerId: ApiProvider, apiKey: string): Promise<void> {
+    validateProviderOrThrow(providerId);
     // Validate API key format
     if (!this.providerService.validateApiKey(providerId, apiKey)) {
       throw new ApiKeyStorageError(`Invalid API key format for provider: ${providerId}`);
@@ -112,6 +113,7 @@ export class ApiKeyServiceMain {
    * @private
    */
   async _getDecryptedKey(providerId: ApiProvider): Promise<string | null> {
+    validateProviderOrThrow(providerId);
     try {
       const filePath = this.getFilePath(providerId);
       
@@ -161,6 +163,7 @@ export class ApiKeyServiceMain {
    * @param providerId The provider to delete the key for
    */
   async deleteKey(providerId: ApiProvider): Promise<void> {
+    validateProviderOrThrow(providerId);
     try {
       // Remove from metadata
       this.loadedKeyMetadata.delete(providerId);
@@ -188,6 +191,7 @@ export class ApiKeyServiceMain {
    * @returns true if a key is stored, false otherwise
    */
   async isKeyStored(providerId: ApiProvider): Promise<boolean> {
+    validateProviderOrThrow(providerId);
     // Check metadata first (fastest)
     if (this.loadedKeyMetadata.has(providerId)) {
       return true;
@@ -297,6 +301,7 @@ export class ApiKeyServiceMain {
    * @returns Object containing storage status and last four characters if stored
    */
   async getApiKeyDisplayInfo(providerId: ApiProvider): Promise<{ isStored: boolean, lastFourChars?: string }> {
+    validateProviderOrThrow(providerId);
     try {
       // Check metadata first
       const metadata = this.loadedKeyMetadata.get(providerId);
@@ -383,6 +388,36 @@ export class ApiKeyServiceMain {
    * @private
    */
   private getFilePath(providerId: ApiProvider): string {
-    return path.join(this.storageDir, `${providerId}.json`);
+    validateProviderOrThrow(providerId);
+    return this.validateAndGetSecurePath(providerId);
+  }
+
+  /**
+   * Validates and constructs a secure file path within the storage directory.
+   *
+   * @param providerId The provider ID, which is used as the filename.
+   * @returns A secure, absolute path to the file.
+   * @throws ApiKeyStorageError if the path is invalid or attempts to traverse directories.
+   * @private
+   */
+  private validateAndGetSecurePath(providerId: string): string {
+    // Basic validation to ensure the providerId is a valid filename.
+    if (!/^[a-zA-Z0-9_-]+$/.test(providerId)) {
+        throw new ApiKeyStorageError(`Invalid characters in provider ID: ${providerId}`);
+    }
+
+    const fileName = `${providerId}.json`;
+    const fullPath = path.join(this.storageDir, fileName);
+
+    // Normalize the path to resolve any ".." segments.
+    const normalizedPath = path.normalize(fullPath);
+
+    // Security check: Ensure the resolved path is still within the intended storage directory.
+    if (!normalizedPath.startsWith(this.storageDir)) {
+        console.error(`Security Alert: Path traversal attempt detected for providerId: ${providerId}. Resolved path: ${normalizedPath}`);
+        throw new ApiKeyStorageError("Invalid provider ID resulting in path traversal.");
+    }
+
+    return normalizedPath;
   }
 }
