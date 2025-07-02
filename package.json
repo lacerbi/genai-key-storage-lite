@@ -1,6 +1,6 @@
 {
   "name": "genai-key-storage-lite",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A secure API key storage module for Electron generative AI based applications using native OS credential stores.",
   "keywords": ["electron", "security", "api-keys", "storage", "encryption", "ai", "genai"],
   "author": "Luigi Acerbi <luigi.acerbi@gmail.com>",
