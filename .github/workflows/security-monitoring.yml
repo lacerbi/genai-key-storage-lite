@@ -9,6 +9,10 @@ on:
     paths:
       - 'package.json'
       - 'package-lock.json'
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
 
 jobs:
   security-audit:
@@ -100,7 +104,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     
     steps:
       - name: Checkout code
