@@ -20,6 +20,28 @@ npm install genai-key-storage-lite
 yarn add genai-key-storage-lite
 ```
 
+## Available Exports
+
+This package provides separate exports for each Electron process type to ensure proper bundling:
+
+- **Main process**: `genai-key-storage-lite` (default export)
+  - `ApiKeyServiceMain` - Core service for secure key storage
+  - `registerSecureApiKeyIpc` - IPC handler registration
+  
+- **Renderer process**: `genai-key-storage-lite/renderer`
+  - `ApiKeyServiceRenderer` - Client-side service for UI
+  - `IApiKeyManagerBridge` - TypeScript interface for bridge
+  
+- **Preload script**: `genai-key-storage-lite/preload`
+  - `createApiKeyManagerBridge` - Creates IPC bridge
+  
+- **Common types**: `genai-key-storage-lite/common`
+  - `ApiProvider` - Type union of supported providers
+  - `ApiKeyStorageError` - Error class
+  - All shared types and interfaces
+
+> **Important**: Always import common types from `/common` to avoid webpack bundling issues with main process code.
+
 ## How to Use
 
 Integrating the module into your Electron application involves three steps.
@@ -93,7 +115,8 @@ Finally, you can use the `ApiKeyServiceRenderer` in your UI. It must be instanti
 ```typescript
 // In a React component or service
 import { ApiKeyServiceRenderer } from "genai-key-storage-lite/renderer";
-import type { ApiProvider } from "genai-key-storage-lite"; // Common types are exported from the root
+import { ApiKeyStorageError } from "genai-key-storage-lite/common";
+import type { ApiProvider } from "genai-key-storage-lite/common";
 import React, { useState, useEffect } from "react";
 
 // Instantiate the service by passing the bridged object from the window.
@@ -115,7 +138,11 @@ const MySettingsComponent = () => {
       await apiKeyService.storeKey(providerId, key);
       alert(`${providerId} key stored successfully.`);
     } catch (error) {
-      alert(`Failed to store key: ${error.message}`);
+      if (error instanceof ApiKeyStorageError) {
+        alert(`Failed to store key: ${error.message} (${error.code})`);
+      } else {
+        alert(`Failed to store key: ${error.message}`);
+      }
     }
   };
 
