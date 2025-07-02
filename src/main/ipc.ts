@@ -41,10 +41,10 @@ export function registerSecureApiKeyIpc(apiKeyService: ApiKeyServiceMain): void 
   // The renderer process should use secure-api:invoke-call instead for API operations
 
   // Delete API key
-  ipcMain.handle(IPCChannelNames.SECURE_API_KEY_DELETE, async (_event, providerId: ApiProvider) => {
+  ipcMain.handle(IPCChannelNames.SECURE_API_KEY_DELETE, async (_event, providerId: string) => {
     try {
       validateProviderOrThrow(providerId);
-      await apiKeyService.deleteKey(providerId);
+      await apiKeyService.deleteKey(providerId as ApiProvider);
       return { success: true };
     } catch (error) {
       if (error instanceof ApiKeyStorageError) {
@@ -55,10 +55,10 @@ export function registerSecureApiKeyIpc(apiKeyService: ApiKeyServiceMain): void 
   });
 
   // Check if API key is stored
-  ipcMain.handle(IPCChannelNames.SECURE_API_KEY_IS_STORED, async (_event, providerId: ApiProvider) => {
+  ipcMain.handle(IPCChannelNames.SECURE_API_KEY_IS_STORED, async (_event, providerId: string) => {
     try {
       validateProviderOrThrow(providerId);
-      return await apiKeyService.isKeyStored(providerId);
+      return await apiKeyService.isKeyStored(providerId as ApiProvider);
     } catch (error) {
       if (error instanceof ApiKeyStorageError) {
         throw error;
@@ -80,10 +80,10 @@ export function registerSecureApiKeyIpc(apiKeyService: ApiKeyServiceMain): void 
   });
 
   // Get API key display info
-  ipcMain.handle(IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO, async (_event, providerId: ApiProvider) => {
+  ipcMain.handle(IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO, async (_event, providerId: string) => {
     try {
       validateProviderOrThrow(providerId);
-      return await apiKeyService.getApiKeyDisplayInfo(providerId);
+      return await apiKeyService.getApiKeyDisplayInfo(providerId as ApiProvider);
     } catch (error) {
       if (error instanceof ApiKeyStorageError) {
         throw error;
