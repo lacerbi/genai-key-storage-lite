@@ -38,7 +38,7 @@
     "test": "jest"
   },
   "peerDependencies": {
-    "electron": "^25.0.0"
+    "electron": ">=25.0.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
