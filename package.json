@@ -6,15 +6,15 @@
   "types": "./dist/main/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/main/index.js",
+      "require": "./dist/main/index.js",
       "types": "./dist/main/index.d.ts"
     },
     "./renderer": {
-      "import": "./dist/renderer/index.js",
+      "require": "./dist/renderer/index.js",
       "types": "./dist/renderer/index.d.ts"
     },
     "./preload": {
-      "import": "./dist/preload/index.js",
+      "require": "./dist/preload/index.js",
       "types": "./dist/preload/index.d.ts"
     }
   },
