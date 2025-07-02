@@ -63,7 +63,7 @@ describe('ApiKeyServiceMain', () => {
       await service.storeKey(providerId, apiKey);
       
       expect(mockedSafeStorage.encryptString).toHaveBeenCalledWith(apiKey);
-      const expectedPath = `${mockUserDataPath}/secure_api_keys/${providerId}.json`;
+      const expectedPath = path.join(mockUserDataPath, 'secure_api_keys', `${providerId}.json`);
       const expectedData = JSON.stringify({
         encryptedKey: encryptedKey.toString('base64'),
         lastFourChars: lastFour,
@@ -97,7 +97,7 @@ describe('ApiKeyServiceMain', () => {
       const result = await service.withDecryptedKey(providerId, operation);
       
       expect(result).toBe('success');
-      expect(mockedFsPromises.readFile).toHaveBeenCalledWith(`${mockUserDataPath}/secure_api_keys/openai.json`, 'utf-8');
+      expect(mockedFsPromises.readFile).toHaveBeenCalledWith(path.join(mockUserDataPath, 'secure_api_keys', 'openai.json'), 'utf-8');
       expect(mockedSafeStorage.decryptString).toHaveBeenCalled();
       expect(operation).toHaveBeenCalledWith(apiKey);
     });
@@ -111,7 +111,7 @@ describe('ApiKeyServiceMain', () => {
   describe('deleteKey', () => {
     it('should delete a key file', async () => {
       await service.deleteKey('openai');
-      const expectedPath = `${mockUserDataPath}/secure_api_keys/openai.json`;
+      const expectedPath = path.join(mockUserDataPath, 'secure_api_keys', 'openai.json');
       expect(mockedFsPromises.unlink).toHaveBeenCalledWith(expectedPath);
     });
   });

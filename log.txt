@@ -1,22 +1,4 @@
-Run npm test
-
-> genai-key-storage-lite@0.1.0 test
-> jest
-
-PASS src/main/ipc.test.ts (6.28 s)
-  ● Console
-
-    console.log
-      Secure API key IPC handlers registered
-
-      at registerSecureApiKeyIpc (src/main/ipc.ts:96:11)
-
-PASS src/renderer/ApiKeyServiceRenderer.test.ts (6.465 s)
-PASS src/common/providers/ProviderService.test.ts
-PASS src/preload/index.test.ts
-PASS src/common/providers/MistralProvider.test.ts
-PASS src/common/providers/GeminiProvider.test.ts
-FAIL src/main/ApiKeyServiceMain.test.ts (7.591 s)
+FAIL src/main/ApiKeyServiceMain.test.ts (6.859 s)
   ● Console
 
     console.log
@@ -43,11 +25,42 @@ FAIL src/main/ApiKeyServiceMain.test.ts (7.591 s)
       API key stored successfully for provider: openai
 
       at ApiKeyServiceMain.storeKey (src/main/ApiKeyServiceMain.ts:98:15)
-      117 |
 
-      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:114:39)
+    console.log
+      Found 0 encrypted API key files
 
-  ● ApiKeyServiceMain › isKeyStored › should return true if key file exists on disk but not in memory
+    Number of calls: 1
+
+      69 |         lastFourChars: lastFour,
+      70 |       });
+    > 71 |       expect(mockedFsPromises.writeFile).toHaveBeenCalledWith(expectedPath, expectedData);
+         |                                          ^
+      72 |     });
+      73 |     
+      74 |     it('should throw if API key format is invalid', async () => {
+
+      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:71:42)
+
+  ● ApiKeyServiceMain › withDecryptedKey › should decrypt and provide key to the callback
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "/mock/user/data/secure_api_keys/openai.json", "utf-8"
+    Received: "\\mock\\user\\data\\secure_api_keys\\openai.json", "utf-8"
+
+    Number of calls: 1
+
+       98 |       
+       99 |       expect(result).toBe('success');
+    > 100 |       expect(mockedFsPromises.readFile).toHaveBeenCalledWith(`${mockUserDataPath}/secure_api_keys/openai.json`, 'utf-8');
+          |                                         ^
+      101 |       expect(mockedSafeStorage.decryptString).toHaveBeenCalled();
+      102 |       expect(operation).toHaveBeenCalledWith(apiKey);
+      103 |     });
+
+      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:100:41)
+
+  ● ApiKeyServiceMain › deleteKey › should delete a key file
 
     expect(jest.fn()).toHaveBeenCalledWith(...expected)
 
@@ -56,40 +69,25 @@ FAIL src/main/ApiKeyServiceMain.test.ts (7.591 s)
 
     Number of calls: 1
 
-      147 |       mockedFsPromises.readFile.mockResolvedValue(JSON.stringify({ lastFourChars: 'yyyy' }));
-      148 |       await expect(service.isKeyStored('openai')).resolves.toBe(true);
-    > 149 |       expect(mockedFsPromises.access).toHaveBeenCalledWith(`${mockUserDataPath}/secure_api_keys/openai.json`);
+      113 |       await service.deleteKey('openai');
+      114 |       const expectedPath = `${mockUserDataPath}/secure_api_keys/openai.json`;
+    > 115 |       expect(mockedFsPromises.unlink).toHaveBeenCalledWith(expectedPath);
           |                                       ^
-      150 |     });
-      151 |
-      152 |     it('should return false if key is not in memory and file does not exist', async () => {
+      116 |     });
+      117 |   });
+      118 |
 
-      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:149:39)
+      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:115:39)
 
-  ● ApiKeyServiceMain › validateAndGetSecurePath › should return valid path for legitimate provider ID
-
-    expect(received).toBe(expected) // Object.is equality
-
-    Expected: "/mock/user/data/secure_api_keys/openai.json"
-    Received: "\\mock\\user\\data\\secure_api_keys\\openai.json"
-
-      288 |       const validProviderId = 'openai';
-      289 |       const result = internalService.validateAndGetSecurePath(validProviderId);
-    > 290 |       expect(result).toBe(`${mockUserDataPath}/secure_api_keys/openai.json`);
-          |                      ^
-      291 |     });
-      292 |   });
-      293 | });
-
-      at Object.<anonymous> (src/main/ApiKeyServiceMain.test.ts:290:22)
-
-PASS src/common/providers/OpenAIProvider.test.ts
+PASS src/preload/index.test.ts
+PASS src/common/providers/ProviderService.test.ts
+PASS src/common/providers/MistralProvider.test.ts
+PASS src/common/providers/GeminiProvider.test.ts
 PASS src/common/providers/AnthropicProvider.test.ts
+PASS src/common/providers/OpenAIProvider.test.ts
 PASS src/common/errors.test.ts
 
 Test Suites: 1 failed, 9 passed, 10 total
-Tests:       6 failed, 108 passed, 114 total
+Tests:       4 failed, 110 passed, 114 total
 Snapshots:   0 total
-Time:        9.025 s
-Ran all test suites.
-Error: Process completed with exit code 1.
+Time:        9.658 s
