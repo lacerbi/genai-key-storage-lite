@@ -55,7 +55,7 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
-    "electron": "^25.0.0",
+    "electron": "^39.2.5",
     "jest": "^30.0.3",
     "ts-jest": "^29.4.0",
     "typescript": "^5.0.0"
