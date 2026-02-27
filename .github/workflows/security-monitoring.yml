@@ -18,6 +18,8 @@ jobs:
   security-audit:
     name: Daily Security Audit
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     
     steps:
       - name: Checkout code
