@@ -19,72 +19,134 @@ jobs:
     name: Daily Security Audit
     runs-on: ubuntu-latest
     permissions:
+      contents: write
+      pull-requests: write
       issues: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Run security audit
+        id: audit
         run: |
-          echo "🔍 Running npm security audit..."
+          echo "Running npm security audit..."
           npm audit --audit-level=moderate --json > audit-results.json || true
-          
+
           # Check if there are any vulnerabilities
           if [ -s audit-results.json ]; then
-            echo "📊 Audit Results:"
+            echo "Audit Results:"
             cat audit-results.json | jq -r '.vulnerabilities | to_entries[] | "\(.key): \(.value.severity)"' || true
-            
+
             # Check for high/critical vulnerabilities
-            HIGH_CRITICAL=$(cat audit-results.json | jq -r '.metadata.vulnerabilities.high // 0 + .metadata.vulnerabilities.critical // 0')
-            
+            HIGH_CRITICAL=$(cat audit-results.json | jq -r '((.metadata.vulnerabilities.high // 0) + (.metadata.vulnerabilities.critical // 0))')
+
             if [ "$HIGH_CRITICAL" -gt 0 ]; then
-              echo "❌ High or critical vulnerabilities found!"
+              echo "High or critical vulnerabilities found!"
+              echo "has_vulnerabilities=true" >> "$GITHUB_OUTPUT"
               npm audit
               exit 1
             else
-              echo "✅ No high or critical vulnerabilities found"
+              echo "No high or critical vulnerabilities found"
+              echo "has_vulnerabilities=false" >> "$GITHUB_OUTPUT"
             fi
           else
-            echo "✅ No vulnerabilities found"
+            echo "No vulnerabilities found"
+            echo "has_vulnerabilities=false" >> "$GITHUB_OUTPUT"
           fi
-          
+
       - name: Check for outdated dependencies
+        if: always()
         run: |
-          echo "📦 Checking for outdated dependencies..."
+          echo "Checking for outdated dependencies..."
           npm outdated || echo "Some dependencies are outdated"
-          
-      - name: Create issue for vulnerabilities
-        if: failure()
+
+      - name: Attempt automatic fix
+        id: fix
+        if: >-
+          failure()
+          && steps.audit.outputs.has_vulnerabilities == 'true'
+          && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        run: |
+          echo "Attempting npm audit fix..."
+          if npm audit fix; then
+            # Re-check audit after fix
+            if npm audit --audit-level=high; then
+              echo "fix_successful=true" >> "$GITHUB_OUTPUT"
+              echo "All high/critical vulnerabilities resolved by npm audit fix"
+            else
+              echo "fix_successful=false" >> "$GITHUB_OUTPUT"
+              echo "npm audit fix did not resolve all vulnerabilities"
+            fi
+          else
+            echo "fix_successful=false" >> "$GITHUB_OUTPUT"
+            echo "npm audit fix command itself failed"
+          fi
+
+      - name: Run tests after fix
+        id: tests
+        if: failure() && steps.fix.outputs.fix_successful == 'true'
+        run: |
+          npm run build
+          npm test
+
+      - name: Create Pull Request
+        if: failure() && steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "fix: resolve security vulnerabilities in dependencies"
+          branch: automated/security-fix
+          delete-branch: true
+          title: "fix: resolve security vulnerabilities in dependencies"
+          body: |
+            ## Automated Security Fix
+
+            `npm audit` detected high or critical vulnerabilities and `npm audit fix` resolved them.
+
+            **Changes:** Updated dependency versions in `package-lock.json`.
+
+            **Verification:**
+            - `npm audit` passes with no high/critical vulnerabilities
+            - `npm run build` succeeds
+            - `npm test` passes
+
+            This PR was automatically created by the security monitoring workflow.
+          labels: security,automated
+
+      - name: Create issue if auto-fix failed
+        if: >-
+          failure()
+          && steps.audit.outputs.has_vulnerabilities == 'true'
+          && steps.fix.outputs.fix_successful != 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const title = `🚨 Security vulnerabilities detected - ${new Date().toISOString().split('T')[0]}`;
-            const body = `
-            ## Security Alert
-            
-            High or critical security vulnerabilities have been detected in dependencies.
-            
-            **Action Required:**
-            - Review the vulnerabilities using \`npm audit\`
-            - Update affected packages using \`npm audit fix\`
-            - Test thoroughly after updates
-            - Close this issue once resolved
-            
-            **Automated Detection Date:** ${new Date().toISOString()}
-            
-            This issue was automatically created by the security monitoring workflow.
-            `;
-            
+            const title = `Security vulnerabilities detected - ${new Date().toISOString().split('T')[0]}`;
+            const body = [
+              '## Security Alert',
+              '',
+              'High or critical security vulnerabilities were detected and **could not be automatically fixed** by `npm audit fix`.',
+              '',
+              '**Action Required:**',
+              '- Review the vulnerabilities using `npm audit`',
+              '- Manually update affected packages',
+              '- Test thoroughly after updates',
+              '- Close this issue once resolved',
+              '',
+              `**Automated Detection Date:** ${new Date().toISOString()}`,
+              '',
+              'This issue was automatically created by the security monitoring workflow.',
+            ].join('\n');
+
             // Check if a similar issue already exists
             const existingIssues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -92,7 +154,7 @@ jobs:
               labels: ['security', 'automated'],
               state: 'open'
             });
-            
+
             if (existingIssues.data.length === 0) {
               await github.rest.issues.create({
                 owner: context.repo.owner,
@@ -107,58 +169,58 @@ jobs:
     name: Dependency Review
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: moderate
           deny-licenses: GPL-2.0, GPL-3.0
-          
+
   license-compliance:
     name: License Compliance Check
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Check licenses
         run: |
-          echo "📄 Checking dependency licenses..."
-          
+          echo "Checking dependency licenses..."
+
           # Install license checker
           npm install -g license-checker
-          
+
           # Check licenses and generate report
           license-checker --json --out licenses.json
-          
+
           # Check for problematic licenses
           PROBLEMATIC_LICENSES=("GPL-2.0" "GPL-3.0" "AGPL-1.0" "AGPL-3.0")
-          
+
           echo "Checking for problematic licenses..."
           for license in "${PROBLEMATIC_LICENSES[@]}"; do
             if grep -q "$license" licenses.json; then
-              echo "❌ Found problematic license: $license"
+              echo "Found problematic license: $license"
               grep "$license" licenses.json
               exit 1
             fi
           done
-          
-          echo "✅ All dependency licenses are compatible"
-          
+
+          echo "All dependency licenses are compatible"
+
       - name: Upload license report
         uses: actions/upload-artifact@v4
         with:
