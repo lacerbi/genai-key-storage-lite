@@ -3,6 +3,7 @@
 
 # Build directories
 /dist
+/coverage
 /forge
 /.webpack
 /out
