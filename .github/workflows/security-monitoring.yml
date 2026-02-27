@@ -92,6 +92,10 @@ jobs:
             echo "npm audit fix command itself failed"
           fi
 
+      - name: Bump patch version
+        if: failure() && steps.fix.outputs.fix_successful == 'true'
+        run: npm version patch --no-git-tag-version
+
       - name: Run tests after fix
         id: tests
         if: failure() && steps.fix.outputs.fix_successful == 'true'
