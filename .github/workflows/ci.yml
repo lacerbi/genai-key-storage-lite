@@ -20,7 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18.x, 20.x, 22.x]
+        # Node 18.x removed: Jest 30 requires os.availableParallelism() (Node >= 20).
+        # The library itself is compatible with Node 18+ but can't run tests on it.
+        node-version: [20.x, 22.x]
         
     steps:
       - name: Checkout code
@@ -270,9 +272,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Test Matrix Coverage:**" >> $GITHUB_STEP_SUMMARY
           echo "- **Operating Systems**: Ubuntu, Windows, macOS" >> $GITHUB_STEP_SUMMARY
-          echo "- **Node.js Versions**: 18.x, 20.x, 22.x" >> $GITHUB_STEP_SUMMARY
+          echo "- **Node.js Versions**: 20.x, 22.x" >> $GITHUB_STEP_SUMMARY
           echo "- **Electron Versions**: 25.x, 26.x, 27.x, 28.x" >> $GITHUB_STEP_SUMMARY
-          echo "- **Total Test Combinations**: 27 (9 OS/Node + 12 OS/Electron + 6 validation jobs)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Test Combinations**: 24 (6 OS/Node + 12 OS/Electron + 6 validation jobs)" >> $GITHUB_STEP_SUMMARY
           
       - name: Set final status
         if: needs.test.result != 'success' || needs.lint-and-format.result != 'success' || needs.package-validation.result != 'success'
