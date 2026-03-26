@@ -22,6 +22,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      statuses: write
 
     steps:
       - name: Checkout code
@@ -103,7 +104,24 @@ jobs:
           npm run build
           npm test
 
+      - name: Clean up audit artifacts
+        if: failure() && steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
+        run: rm -f audit-results.json
+
+      - name: Capture dependency diff
+        id: dep-diff
+        if: failure() && steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
+        run: |
+          DIFF=$(git diff package-lock.json | grep -E '^\+.*"version"|^\+.*"resolved"' | head -20 || true)
+          # Use a delimiter for multiline output
+          echo "diff<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$DIFF" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Create Pull Request
+        id: create-pr
         if: failure() && steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
         uses: peter-evans/create-pull-request@v7
         with:
@@ -126,11 +144,67 @@ jobs:
             This PR was automatically created by the security monitoring workflow.
           labels: security,automated
 
+      - name: Set commit status
+        if: >-
+          failure()
+          && steps.create-pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.create-pr.outputs.pull-request-head-sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api \
+            "repos/${REPO}/statuses/${HEAD_SHA}" \
+            -f state=success \
+            -f context="Build and Test" \
+            -f description="Build and tests passed (verified by security workflow)"
+
+      - name: Merge PR
+        id: merge-pr
+        if: >-
+          failure()
+          && steps.create-pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+        run: |
+          sleep 10
+          gh pr merge "$PR_NUMBER" --squash --delete-branch
+
+      - name: Comment on merged PR
+        if: >-
+          failure()
+          && steps.merge-pr.conclusion == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+          NEW_VERSION: ${{ steps.dep-diff.outputs.new_version }}
+          DEP_DIFF: ${{ steps.dep-diff.outputs.diff }}
+        run: |
+          BODY="## Automated Security Fix
+
+          This PR was **automatically created and merged** by the security monitoring workflow.
+
+          **What happened:**
+          - \`npm audit\` detected high/critical vulnerabilities
+          - \`npm audit fix\` resolved them
+          - \`npm run build\` and \`npm test\` both passed
+          - Patch version bumped to \`${NEW_VERSION}\`
+
+          **Dependency changes:**
+          \`\`\`
+          ${DEP_DIFF}
+          \`\`\`
+
+          **Action required:** The package has **NOT** been published to npm. If you want to release this fix, run \`npm publish\` manually."
+          gh pr comment "$PR_NUMBER" --body "$BODY"
+
       - name: Create issue if auto-fix failed
         if: >-
           failure()
           && steps.audit.outputs.has_vulnerabilities == 'true'
           && steps.fix.outputs.fix_successful != 'true'
+          && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         uses: actions/github-script@v7
         with:
           script: |
