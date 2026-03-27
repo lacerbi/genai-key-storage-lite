@@ -28,6 +28,7 @@ docs/
 examples/
 PORTING.md
 CLAUDE.md
+PLAN-*.md
 
 # Project-specific
 .ath_materials/

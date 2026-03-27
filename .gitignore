@@ -34,6 +34,9 @@ codebase.md
 /temp-folder
 .npmrc
 
+# Plan files
+PLAN-*.md
+
 # Audit script artifacts
 =*
 audit-results.json
