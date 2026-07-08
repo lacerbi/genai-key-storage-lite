@@ -9,8 +9,8 @@ This directory contains the GitHub Actions workflows and configuration for autom
 
 **Test Matrix:**
 - **Operating Systems**: Ubuntu, Windows, macOS
-- **Node.js Versions**: 18.x, 20.x, 22.x  
-- **Total Combinations**: 9 OS/Node combinations
+- **Node.js Versions**: 20.x, 22.x
+- **Total Combinations**: 6 OS/Node combinations
 
 **Jobs:**
 - **`test`** - Runs the full test suite across all OS/Node combinations
@@ -24,8 +24,8 @@ This directory contains the GitHub Actions workflows and configuration for autom
 **Triggers:** Release events, version tags (`v*`), manual dispatch
 
 **Extended Test Matrix:**
-- **Operating Systems**: Ubuntu 20.04/22.04, Windows 2019/2022, macOS 11/12/13
-- **Node.js Versions**: 18.12.0, 18.x, 20.9.0, 20.x, 22.0.0, 22.x
+- **Operating Systems**: Ubuntu 22.04/24.04, Windows 2022/latest, macOS 14/latest
+- **Node.js Versions**: 20.9.0, 20.x, 22.0.0, 22.x
 - **Electron Versions**: 25.0.0-30.0.0 (comprehensive range testing)
 
 **Jobs:**
@@ -65,12 +65,11 @@ This directory contains the GitHub Actions workflows and configuration for autom
 The CI system provides comprehensive test coverage across:
 
 ### **Cross-Platform Testing**
-- ✅ **Ubuntu** (20.04, 22.04) - Linux compatibility
-- ✅ **Windows** (2019, 2022) - Windows compatibility  
-- ✅ **macOS** (11, 12, 13) - macOS compatibility
+- ✅ **Ubuntu** (22.04, 24.04, latest) - Linux compatibility
+- ✅ **Windows** (2022, latest) - Windows compatibility
+- ✅ **macOS** (14, latest) - macOS compatibility
 
 ### **Node.js Compatibility**
-- ✅ **Node 18.x** (LTS) - Long-term support
 - ✅ **Node 20.x** (LTS) - Current LTS
 - ✅ **Node 22.x** (Current) - Latest features
 
