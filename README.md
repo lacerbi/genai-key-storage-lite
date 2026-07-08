@@ -10,7 +10,7 @@ This module leverages Electron's `safeStorage` for OS-level encryption (macOS Ke
 - **Strict Process Separation**: Plaintext keys are never sent to the renderer process, preventing accidental exposure.
 - **On-Demand Decryption**: Keys are decrypted only when needed for an API call and are never cached in plaintext in memory.
 - **Simple Integration**: Provides clear, separated components for your application's `main`, `renderer`, and `preload` processes.
-- **Built-in Provider Validation**: Includes key format validators for popular AI providers (OpenAI, Anthropic, Gemini, Mistral).
+- **Built-in Provider Validation**: Includes key format validators for popular AI providers (OpenAI, Anthropic, Gemini, Mistral, OpenRouter).
 
 ## Installation
 

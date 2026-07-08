@@ -1,6 +1,6 @@
 {
   "name": "genai-key-storage-lite",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "A secure API key storage module for Electron generative AI based applications using native OS credential stores.",
   "keywords": [
     "electron",
@@ -47,7 +47,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "publish:check": "npm run build && npm pack --dry-run",
+    "prepublishOnly": "npm run publish:check"
   },
   "peerDependencies": {
     "electron": ">=25.0.0"

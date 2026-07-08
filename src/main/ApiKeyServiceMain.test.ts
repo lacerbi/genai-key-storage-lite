@@ -79,6 +79,22 @@ describe('ApiKeyServiceMain', () => {
         expect(writeFileCall[2]).toEqual({ mode: 0o600 });
       }
     });
+
+    it('should store an OpenRouter API key in its own provider file', async () => {
+      const apiKey = `sk-or-${'x'.repeat(34)}`;
+      const providerId = 'openrouter';
+      const encryptedKey = Buffer.from('encrypted-openrouter-key');
+
+      mockedSafeStorage.isEncryptionAvailable.mockReturnValue(true);
+      mockedSafeStorage.encryptString.mockReturnValue(encryptedKey);
+
+      await service.storeKey(providerId, apiKey);
+
+      expect(mockedSafeStorage.encryptString).toHaveBeenCalledWith(apiKey);
+      const expectedPath = path.join(mockUserDataPath, 'secure_api_keys', 'openrouter.json');
+      const writeFileCall = mockedFsPromises.writeFile.mock.calls[0];
+      expect(writeFileCall[0]).toBe(expectedPath);
+    });
     
     it('should throw if API key format is invalid', async () => {
       await expect(service.storeKey('openai', 'invalid-key')).rejects.toThrow(ApiKeyStorageError);

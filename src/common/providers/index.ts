@@ -6,4 +6,5 @@ export { OpenAIProvider } from './OpenAIProvider';
 export { AnthropicProvider } from './AnthropicProvider';
 export { GeminiProvider } from './GeminiProvider';
 export { MistralProvider } from './MistralProvider';
+export { OpenRouterProvider } from './OpenRouterProvider';
 export { ProviderService } from './ProviderService';
