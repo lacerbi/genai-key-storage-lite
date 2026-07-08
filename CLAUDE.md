@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Development:**
 - `npm run build` - Build the TypeScript library to `dist/` directory
-- `npm test` - Run comprehensive Jest test suite (32 tests across 6 test suites)
+- `npm test` - Run comprehensive Jest test suite
 
 **Project Structure:**
 - TypeScript library with exports for `main`, `renderer`, and `preload` processes
@@ -52,7 +52,7 @@ This is a secure API key storage library for Electron applications that leverage
 
 **`ProviderService`** (`src/common/providers/ProviderService.ts`):
 - Manages API provider validators and format validation
-- Built-in support for: OpenAI, Anthropic, Gemini, Mistral
+- Built-in support for: OpenAI, Anthropic, Gemini, Mistral, OpenRouter
 - Extensible architecture for adding new providers
 - Centralized validation logic used by both main and renderer processes
 
@@ -93,6 +93,7 @@ This is a secure API key storage library for Electron applications that leverage
 - Anthropic: `sk-ant-` prefix validation  
 - Gemini: Google API key format validation
 - Mistral: Mistral API key format validation
+- OpenRouter: `sk-or-` prefix validation
 
 ## Integration Patterns
 
@@ -150,11 +151,11 @@ const apiKeyService = new ApiKeyServiceRenderer(
 
 **Testing:**
 - **Jest test framework** configured with TypeScript support (`ts-jest`)
-- **Comprehensive test coverage** with 32 tests across all modules:
-  - `src/common/` - Core utilities and provider validation (13 tests)
-  - `src/main/` - ApiKeyServiceMain security and IPC handlers (12 tests) 
-  - `src/renderer/` - Client-side service functionality (5 tests)
-  - `src/preload/` - IPC bridge communication (2 tests)
+- **Comprehensive test coverage** across all modules:
+  - `src/common/` - Core utilities and provider validation
+  - `src/main/` - ApiKeyServiceMain security and IPC handlers
+  - `src/renderer/` - Client-side service functionality
+  - `src/preload/` - IPC bridge communication
 - **Proper Electron mocking** for `safeStorage`, `ipcMain`, `ipcRenderer`
 - **Security testing** including path traversal prevention
 - **Error handling validation** across all IPC boundaries

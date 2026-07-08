@@ -51,8 +51,8 @@ describe('ApiKeyServiceRenderer', () => {
   describe('Synchronous Helpers', () => {
     it('getAvailableProviders should return all provider IDs from the provider service', () => {
       const providers = service.getAvailableProviders();
-      expect(providers).toEqual(expect.arrayContaining(['openai', 'gemini', 'anthropic', 'mistral']));
-      expect(providers.length).toBe(4);
+      expect(providers).toEqual(expect.arrayContaining(['openai', 'gemini', 'anthropic', 'mistral', 'openrouter']));
+      expect(providers.length).toBe(5);
     });
 
     it('validateApiKeyFormat should correctly validate a key format', () => {

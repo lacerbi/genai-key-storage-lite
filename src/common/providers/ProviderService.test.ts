@@ -21,6 +21,12 @@ describe('ProviderService', () => {
     expect(openaiProvider?.providerId).toBe('openai');
   });
 
+  it('should return the OpenRouter provider validator', () => {
+    const openRouterProvider = providerService.getProvider('openrouter');
+    expect(openRouterProvider).toBeDefined();
+    expect(openRouterProvider?.providerId).toBe('openrouter');
+  });
+
   it('should return undefined for a non-existent provider', () => {
     const nonExistentProvider = providerService.getProvider('non-existent' as any);
     expect(nonExistentProvider).toBeUndefined();
@@ -57,6 +63,14 @@ describe('ProviderService', () => {
 
     it('should reject an incorrect Mistral key', () => {
       expect(providerService.validateApiKey('mistral', 'short')).toBe(false);
+    });
+
+    it('should validate a correct OpenRouter key', () => {
+      expect(providerService.validateApiKey('openrouter', `sk-or-${'x'.repeat(34)}`)).toBe(true);
+    });
+
+    it('should reject an incorrect OpenRouter key', () => {
+      expect(providerService.validateApiKey('openrouter', `sk-${'x'.repeat(37)}`)).toBe(false);
     });
 
     it('should return false for an unknown provider', () => {

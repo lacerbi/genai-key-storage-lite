@@ -4,12 +4,12 @@
 /**
  * Supported API providers for the secure storage system
  */
-export type ApiProvider = 'openai' | 'anthropic' | 'gemini' | 'mistral';
+export type ApiProvider = 'openai' | 'anthropic' | 'gemini' | 'mistral' | 'openrouter';
 
 /**
  * A constant array of valid API provider IDs.
  */
-export const VALID_PROVIDERS: ApiProvider[] = ['openai', 'anthropic', 'gemini', 'mistral'];
+export const VALID_PROVIDERS: ApiProvider[] = ['openai', 'anthropic', 'gemini', 'mistral', 'openrouter'];
 
 /**
  * Payload structure for storing API keys via IPC

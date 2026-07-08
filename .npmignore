@@ -29,6 +29,7 @@ examples/
 PORTING.md
 CLAUDE.md
 PLAN-*.md
+ISSUE-*.md
 
 # Project-specific
 .ath_materials/

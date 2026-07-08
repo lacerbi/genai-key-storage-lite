@@ -7,6 +7,7 @@ import { OpenAIProvider } from './OpenAIProvider';
 import { AnthropicProvider } from './AnthropicProvider';
 import { GeminiProvider } from './GeminiProvider';
 import { MistralProvider } from './MistralProvider';
+import { OpenRouterProvider } from './OpenRouterProvider';
 
 /**
  * Service for managing API provider instances and validation
@@ -75,5 +76,6 @@ export class ProviderService {
     this.registerProvider(new AnthropicProvider());
     this.registerProvider(new GeminiProvider());
     this.registerProvider(new MistralProvider());
+    this.registerProvider(new OpenRouterProvider());
   }
 }
