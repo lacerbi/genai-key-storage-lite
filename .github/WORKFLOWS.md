@@ -25,7 +25,7 @@ This directory contains the GitHub Actions workflows and configuration for autom
 
 **Extended Test Matrix:**
 - **Operating Systems**: Ubuntu 22.04/24.04, Windows 2022/latest, macOS 14/latest
-- **Node.js Versions**: 20.9.0, 20.x, 22.0.0, 22.x
+- **Node.js Versions**: 20.9.0, 20.x, 22.x
 - **Electron Versions**: 25.0.0-30.0.0 (comprehensive range testing)
 
 **Jobs:**
