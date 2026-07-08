@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04, windows-2022, windows-latest, macos-14, macos-latest]
-        node-version: [20.9.0, 20.x, 22.0.0, 22.x]
+        node-version: [20.9.0, 20.x, 22.x]
         
     steps:
       - name: Checkout code
