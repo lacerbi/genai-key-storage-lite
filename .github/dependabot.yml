@@ -48,9 +48,18 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    # Without this, the limit defaults to 5. Once five action PRs are open,
+    # Dependabot cannot open replacements, so stale PRs pin themselves to
+    # versions that are superseded while newer majors go unreported.
+    open-pull-requests-limit: 10
     commit-message:
       prefix: "ci"
       include: "scope"
     labels:
       - "github-actions"
       - "automated"
+    # Ship all action updates as a single PR so the queue cannot saturate.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
