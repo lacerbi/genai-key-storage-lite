@@ -22,7 +22,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04, windows-2022, windows-latest, macos-14, macos-latest]
-        node-version: [20.9.0, 20.x, 22.x]
+        # Pinned floor + both supported LTS lines. Node 20 dropped at its
+        # April 2026 end-of-life; 22.12.0 is the first 22.x LTS release.
+        node-version: [22.12.0, 22.x, 24.x]
         
     steps:
       - name: Checkout code
@@ -97,7 +99,7 @@ jobs:
           "40.x",
           "43.x"   # current latest
         ]
-        node-version: ["20.x"]
+        node-version: ["24.x"]
         
     steps:
       - name: Checkout code
@@ -115,15 +117,20 @@ jobs:
           npm ci --ignore-scripts
           
       - name: Install specific Electron version
+        # --ignore-scripts skips the postinstall binary download (~100MB per
+        # leg). This job only typechecks against the bundled electron.d.ts;
+        # nothing here executes Electron.
         run: |
-          npm install --save-dev electron@${{ matrix.electron-version }}
-          
-      - name: Display Electron version info
-        run: |
-          npx electron --version
-          node -e "console.log('Node in Electron:', process.versions.node)"
-        continue-on-error: true
-        
+          npm install --save-dev --ignore-scripts electron@${{ matrix.electron-version }}
+
+      # Removed: a "Display Electron version info" step that ran
+      # `npx electron --version`. It aborted on every Linux leg because
+      # chrome-sandbox must be owned by root with mode 4755, which npm install
+      # cannot set — emitting a failure annotation on each ubuntu run despite
+      # continue-on-error keeping the job green. Its second line also ran plain
+      # Node, so it reported the runner's Node version while labelling it
+      # "Node in Electron".
+
       - name: Run build with specific Electron
         run: npm run build
         
@@ -144,7 +151,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           cache: 'npm'
           
       - name: Install dependencies
@@ -213,7 +220,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           cache: 'npm'
           
       - name: Install dependencies
@@ -261,7 +268,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           cache: 'npm'
           
       - name: Install dependencies

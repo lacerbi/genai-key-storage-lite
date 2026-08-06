@@ -9,7 +9,7 @@ This directory contains the GitHub Actions workflows and configuration for autom
 
 **Test Matrix:**
 - **Operating Systems**: Ubuntu, Windows, macOS
-- **Node.js Versions**: 20.x, 22.x
+- **Node.js Versions**: 22.x, 24.x
 - **Total Combinations**: 6 OS/Node combinations
 
 **Jobs:**
@@ -25,7 +25,7 @@ This directory contains the GitHub Actions workflows and configuration for autom
 
 **Extended Test Matrix:**
 - **Operating Systems**: Ubuntu 22.04/24.04, Windows 2022/latest, macOS 14/latest
-- **Node.js Versions**: 20.9.0, 20.x, 22.x
+- **Node.js Versions**: 22.12.0, 22.x, 24.x
 - **Electron Versions**: 25.x through 43.x, sampled every third major
 
 **Jobs:**
@@ -70,8 +70,9 @@ The CI system provides comprehensive test coverage across:
 - ✅ **macOS** (14, latest) - macOS compatibility
 
 ### **Node.js Compatibility**
-- ✅ **Node 20.x** (LTS) - Current LTS
-- ✅ **Node 22.x** (Current) - Latest features
+- ✅ **Node 22.x** - Maintenance LTS
+- ✅ **Node 24.x** - Active LTS
+- ⛔ **Node 20.x** - Dropped; reached end-of-life April 2026
 
 ### **Electron Compatibility**
 - ✅ **Electron 25.x-43.x** - Peer floor through current latest
