@@ -23,6 +23,7 @@ jobs:
       pull-requests: write
       issues: write
       statuses: write
+      actions: write
 
     steps:
       - name: Checkout code
@@ -54,8 +55,7 @@ jobs:
             if [ "$HIGH_CRITICAL" -gt 0 ]; then
               echo "High or critical vulnerabilities found!"
               echo "has_vulnerabilities=true" >> "$GITHUB_OUTPUT"
-              npm audit
-              exit 1
+              npm audit || true
             else
               echo "No high or critical vulnerabilities found"
               echo "has_vulnerabilities=false" >> "$GITHUB_OUTPUT"
@@ -74,8 +74,7 @@ jobs:
       - name: Attempt automatic fix
         id: fix
         if: >-
-          failure()
-          && steps.audit.outputs.has_vulnerabilities == 'true'
+          steps.audit.outputs.has_vulnerabilities == 'true'
           && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         run: |
           echo "Attempting npm audit fix..."
@@ -94,23 +93,23 @@ jobs:
           fi
 
       - name: Bump patch version
-        if: failure() && steps.fix.outputs.fix_successful == 'true'
+        if: steps.fix.outputs.fix_successful == 'true'
         run: npm version patch --no-git-tag-version
 
       - name: Run tests after fix
         id: tests
-        if: failure() && steps.fix.outputs.fix_successful == 'true'
+        if: steps.fix.outputs.fix_successful == 'true'
         run: |
           npm run build
           npm test
 
       - name: Clean up audit artifacts
-        if: failure() && steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
+        if: steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
         run: rm -f audit-results.json
 
       - name: Capture dependency diff
         id: dep-diff
-        if: failure() && steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
+        if: steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
         run: |
           DIFF=$(git diff package-lock.json | grep -E '^\+.*"version"|^\+.*"resolved"' | head -20 || true)
           # Use a delimiter for multiline output
@@ -122,7 +121,7 @@ jobs:
 
       - name: Create Pull Request
         id: create-pr
-        if: failure() && steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
+        if: steps.fix.outputs.fix_successful == 'true' && steps.tests.conclusion == 'success'
         uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "fix: resolve security vulnerabilities in dependencies"
@@ -145,9 +144,7 @@ jobs:
           labels: security,automated
 
       - name: Set commit status
-        if: >-
-          failure()
-          && steps.create-pr.outputs.pull-request-number != ''
+        if: steps.create-pr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           HEAD_SHA: ${{ steps.create-pr.outputs.pull-request-head-sha }}
@@ -161,20 +158,17 @@ jobs:
 
       - name: Merge PR
         id: merge-pr
-        if: >-
-          failure()
-          && steps.create-pr.outputs.pull-request-number != ''
+        if: steps.create-pr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
         run: |
           sleep 10
           gh pr merge "$PR_NUMBER" --squash --delete-branch
+          echo "merged=true" >> "$GITHUB_OUTPUT"
 
       - name: Comment on merged PR
-        if: >-
-          failure()
-          && steps.merge-pr.conclusion == 'success'
+        if: steps.merge-pr.outputs.merged == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
@@ -196,14 +190,20 @@ jobs:
           ${DEP_DIFF}
           \`\`\`
 
-          **Action required:** The package has **NOT** been published to npm. If you want to release this fix, run \`npm publish\` manually."
+          **Release:** The publish workflow has been triggered automatically to publish \`v${NEW_VERSION}\` to npm and create the GitHub release."
           gh pr comment "$PR_NUMBER" --body "$BODY"
+
+      - name: Trigger release and npm publish
+        if: steps.merge-pr.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish.yml --ref main
 
       - name: Create issue if auto-fix failed
         if: >-
-          failure()
+          always()
           && steps.audit.outputs.has_vulnerabilities == 'true'
-          && steps.fix.outputs.fix_successful != 'true'
+          && steps.merge-pr.outputs.merged != 'true'
           && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         uses: actions/github-script@v7
         with:
@@ -212,7 +212,7 @@ jobs:
             const body = [
               '## Security Alert',
               '',
-              'High or critical security vulnerabilities were detected and **could not be automatically fixed** by `npm audit fix`.',
+              'High or critical security vulnerabilities were detected and **could not be automatically resolved** (the automatic fix, tests, PR creation, or merge failed).',
               '',
               '**Action Required:**',
               '- Review the vulnerabilities using `npm audit`',
@@ -242,6 +242,15 @@ jobs:
                 labels: ['security', 'automated', 'high-priority']
               });
             }
+
+      - name: Fail if vulnerabilities were not resolved
+        if: >-
+          always()
+          && steps.audit.outputs.has_vulnerabilities == 'true'
+          && steps.merge-pr.outputs.merged != 'true'
+        run: |
+          echo "High or critical vulnerabilities were found and were not automatically resolved."
+          exit 1
 
   dependency-review:
     name: Dependency Review
