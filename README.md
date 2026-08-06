@@ -29,7 +29,16 @@ yarn add genai-key-storage-lite
 
 Electron is a peer dependency, declared as `>=25.0.0`. CI typechecks the library against Electron 25.x (the floor), 39.x, and 43.x on every pull request, and samples every third major from 25.x through 43.x on release.
 
-The package ships CommonJS targeting ES2021. Its type declarations reference no Node.js types, so your project's `@types/node` version is unconstrained by this package.
+The package ships CommonJS targeting ES2021, and every export is usable from both CommonJS and ES modules:
+
+```js
+const { ApiKeyServiceMain } = require("genai-key-storage-lite"); // CommonJS
+import { ApiKeyServiceMain } from "genai-key-storage-lite"; // ES modules
+```
+
+Both conditions resolve to the same file, so there is only ever one instance of the module — `instanceof` checks and module state stay consistent regardless of how a consumer imports it.
+
+Its type declarations reference no Node.js types, so your project's `@types/node` version is unconstrained by this package.
 
 ## Available Exports
 
