@@ -230,6 +230,27 @@ jobs:
             }
           "
 
+          # And that it can be imported from ESM. The require() check above
+          # passed for months while `import` failed outright with
+          # ERR_PACKAGE_PATH_NOT_EXPORTED, because package.json declared no
+          # `import` condition. Testing only one module system hid that
+          # completely — assert named exports actually resolve, since a default
+          # -only import would still succeed while breaking every real consumer.
+          node --input-type=module -e "
+            import { ApiKeyServiceMain } from 'genai-key-storage-lite';
+            import { ApiKeyServiceRenderer } from 'genai-key-storage-lite/renderer';
+            import { createApiKeyManagerBridge } from 'genai-key-storage-lite/preload';
+            import { ApiKeyStorageError } from 'genai-key-storage-lite/common';
+            const named = { ApiKeyServiceMain, ApiKeyServiceRenderer, createApiKeyManagerBridge, ApiKeyStorageError };
+            for (const [name, value] of Object.entries(named)) {
+              if (typeof value !== 'function') {
+                console.error('❌ ESM named export missing or wrong type:', name, typeof value);
+                process.exit(1);
+              }
+            }
+            console.log('✅ ESM imports work correctly');
+          "
+
   # This job is the single required status check in branch protection on main.
   # Keep the name "Build and Test" stable — renaming it silently disables the
   # gate, because branch protection matches required checks by name.
