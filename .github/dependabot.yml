@@ -44,6 +44,15 @@ updates:
       # Ignore major version updates for Electron (require manual review)
       - dependency-name: "electron"
         update-types: ["version-update:semver-major"]
+      # @types/node is held at ^24 on purpose. The peer floor is electron >=25,
+      # whose bundled Node is far older than current; types newer than the
+      # oldest supported runtime let code compile here against APIs that are
+      # absent for consumers on older Electron. This is build-time only — the
+      # generated .d.ts files reference no Node types — so newer types buy
+      # nothing. Revisit deliberately alongside the Electron peer floor rather
+      # than on Dependabot's weekly schedule.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   # Enable security updates for GitHub Actions
   - package-ecosystem: "github-actions"
