@@ -251,6 +251,23 @@ jobs:
             console.log('✅ ESM imports work correctly');
           "
 
+          # Tooling that reads a dependency's manifest needs ./package.json to
+          # be exported explicitly; an exports map without it makes the file
+          # unreachable even though it is present in the tarball.
+          node -e "
+            try {
+              const manifest = require('genai-key-storage-lite/package.json');
+              if (!manifest.version) {
+                console.error('❌ package.json subpath resolved but has no version');
+                process.exit(1);
+              }
+              console.log('✅ package.json subpath is reachable:', manifest.version);
+            } catch (error) {
+              console.error('❌ package.json subpath not exported:', error.message);
+              process.exit(1);
+            }
+          "
+
   # This job is the single required status check in branch protection on main.
   # Keep the name "Build and Test" stable — renaming it silently disables the
   # gate, because branch protection matches required checks by name.
