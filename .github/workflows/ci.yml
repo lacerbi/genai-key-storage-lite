@@ -121,27 +121,38 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        electron-version: [25.x, 26.x, 27.x, 28.x]
-        
+        # One entry per major: the peerDependency floor, the version developed
+        # against, and current latest. Testing several patches inside a major
+        # buys nothing here — see the note on the build step below.
+        electron-version: [25.x, 39.x, 43.x]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: '20.x'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Install specific Electron version
-        run: npm install --save-dev electron@${{ matrix.electron-version }}
-        
+        # --ignore-scripts skips the postinstall binary download. Nothing in
+        # this job executes Electron; only its bundled electron.d.ts is needed.
+        run: npm install --save-dev --ignore-scripts electron@${{ matrix.electron-version }}
+
+      # This is the step that actually exercises the matrix: it typechecks src/
+      # against this Electron version's electron.d.ts, catching drift in the
+      # safeStorage / ipcMain / ipcRenderer signatures the library depends on.
       - name: Run TypeScript build
         run: npm run build
-        
+
+      # Note: the suite mocks the electron module wholesale, so this re-runs the
+      # same assertions on every matrix leg. Kept as a regression guard that the
+      # swapped dependency has not disturbed the build output.
       - name: Run tests with specific Electron version
         run: npm test
         env:
@@ -287,8 +298,8 @@ jobs:
           echo "**Test Matrix Coverage:**" >> $GITHUB_STEP_SUMMARY
           echo "- **Operating Systems**: Ubuntu, Windows, macOS" >> $GITHUB_STEP_SUMMARY
           echo "- **Node.js Versions**: 20.x, 22.x" >> $GITHUB_STEP_SUMMARY
-          echo "- **Electron Versions**: 25.x, 26.x, 27.x, 28.x" >> $GITHUB_STEP_SUMMARY
-          echo "- **Total Test Combinations**: 24 (6 OS/Node + 12 OS/Electron + 6 validation jobs)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Electron Versions**: 25.x (peer floor), 39.x (dev target), 43.x (latest)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Test Combinations**: 19 (6 OS/Node + 9 OS/Electron + 4 validation jobs)" >> $GITHUB_STEP_SUMMARY
           
       - name: Set final status
         if: needs.test.result != 'success' || needs.lint-and-format.result != 'success' || needs.package-validation.result != 'success'

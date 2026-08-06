@@ -16,7 +16,7 @@ This directory contains the GitHub Actions workflows and configuration for autom
 - **`test`** - Runs the full test suite across all OS/Node combinations
 - **`lint-and-format`** - Code quality checks (ESLint, Prettier if available)
 - **`security-audit`** - npm security audit for vulnerabilities
-- **`test-electron-compatibility`** - Tests against Electron versions 25.x-28.x
+- **`test-electron-compatibility`** - Typechecks against Electron 25.x (peer floor), 39.x (dev target), 43.x (latest)
 - **`package-validation`** - Validates package structure and exports
 - **`results-summary`** - Provides a comprehensive summary of all test results
 
@@ -26,7 +26,7 @@ This directory contains the GitHub Actions workflows and configuration for autom
 **Extended Test Matrix:**
 - **Operating Systems**: Ubuntu 22.04/24.04, Windows 2022/latest, macOS 14/latest
 - **Node.js Versions**: 20.9.0, 20.x, 22.x
-- **Electron Versions**: 25.0.0-30.0.0 (comprehensive range testing)
+- **Electron Versions**: 25.x through 43.x, sampled every third major
 
 **Jobs:**
 - **`comprehensive-test`** - Extended testing with coverage reporting
@@ -74,9 +74,9 @@ The CI system provides comprehensive test coverage across:
 - ✅ **Node 22.x** (Current) - Latest features
 
 ### **Electron Compatibility**
-- ✅ **Electron 25.x-30.x** - Broad version support
-- ✅ **Major version testing** - Compatibility validation
-- ✅ **LTS version focus** - Stability emphasis
+- ✅ **Electron 25.x-43.x** - Peer floor through current latest
+- ✅ **Major version testing** - One entry per major; the type surface moves between majors, not patches
+- ✅ **Type-level validation** - Builds `src/` against each version's bundled `electron.d.ts`
 
 ### **Security Validation**
 - ✅ **Dependency auditing** - Vulnerability detection
@@ -86,12 +86,10 @@ The CI system provides comprehensive test coverage across:
 
 ## Status Badges
 
-Add these badges to your README.md:
+The CI and Security Monitoring badges are already in `README.md`. To add another workflow, use the `actions/workflows/<file>` form — the older `/workflows/<Name>/badge.svg` style is deprecated:
 
 ```markdown
-![CI](https://github.com/your-org/genai-key-storage-lite/workflows/CI/badge.svg)
-![Security](https://github.com/your-org/genai-key-storage-lite/workflows/Security%20Monitoring/badge.svg)
-![Release Tests](https://github.com/your-org/genai-key-storage-lite/workflows/Release%20Tests/badge.svg)
+[![Release Tests](https://github.com/lacerbi/genai-key-storage-lite/actions/workflows/release.yml/badge.svg)](https://github.com/lacerbi/genai-key-storage-lite/actions/workflows/release.yml)
 ```
 
 ## Local Testing

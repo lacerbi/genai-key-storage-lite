@@ -12,10 +12,13 @@ updates:
       prefix: "deps"
       prefix-development: "deps-dev"
       include: "scope"
-    reviewers:
-      - "@maintainers"
+    # "@maintainers" never resolved, so nobody was notified when these PRs
+    # opened: this repository is user-owned and therefore has no teams, and
+    # assignees are plain usernames with no "@" prefix. The `reviewers` key it
+    # was also used under is no longer a supported Dependabot option at all —
+    # review requests now come from CODEOWNERS.
     assignees:
-      - "@maintainers"
+      - "lacerbi"
     labels:
       - "dependencies"
       - "automated"
@@ -55,6 +58,8 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
+    assignees:
+      - "lacerbi"
     labels:
       - "github-actions"
       - "automated"

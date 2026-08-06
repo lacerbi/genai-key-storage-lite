@@ -1,5 +1,10 @@
 # GenAI Key Storage Lite
 
+[![CI](https://github.com/lacerbi/genai-key-storage-lite/actions/workflows/ci.yml/badge.svg)](https://github.com/lacerbi/genai-key-storage-lite/actions/workflows/ci.yml)
+[![Security Monitoring](https://github.com/lacerbi/genai-key-storage-lite/actions/workflows/security-monitoring.yml/badge.svg)](https://github.com/lacerbi/genai-key-storage-lite/actions/workflows/security-monitoring.yml)
+[![npm version](https://img.shields.io/npm/v/genai-key-storage-lite.svg)](https://www.npmjs.com/package/genai-key-storage-lite)
+[![license](https://img.shields.io/npm/l/genai-key-storage-lite.svg)](LICENSE)
+
 A secure API key storage module for generative AI-based Electron applications using native OS credential stores.
 
 This module leverages Electron's `safeStorage` for OS-level encryption (macOS Keychain, Windows Credential Vault), ensuring that API keys are not stored in plaintext and are not directly exposed to the renderer process.
@@ -19,6 +24,12 @@ npm install genai-key-storage-lite
 # or
 yarn add genai-key-storage-lite
 ```
+
+## Compatibility
+
+Electron is a peer dependency, declared as `>=25.0.0`. CI typechecks the library against Electron 25.x (the floor), 39.x, and 43.x on every pull request, and samples every third major from 25.x through 43.x on release.
+
+The package ships CommonJS targeting ES2021. Its type declarations reference no Node.js types, so your project's `@types/node` version is unconstrained by this package.
 
 ## Available Exports
 
