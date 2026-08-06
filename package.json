@@ -1,6 +1,6 @@
 {
   "name": "genai-key-storage-lite",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "A secure API key storage module for Electron generative AI based applications using native OS credential stores.",
   "keywords": [
     "electron",
@@ -47,7 +47,8 @@
       "types": "./dist/common/index.d.ts",
       "import": "./dist/common/index.js",
       "require": "./dist/common/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsc",
