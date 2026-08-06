@@ -26,10 +26,10 @@ jobs:
         
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
       - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -82,22 +82,29 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        # Sampled every third major from the peerDependency floor (>=25.0.0)
+        # through current latest, rather than pairs of patches inside a handful
+        # of old majors. This job typechecks against each version's bundled
+        # electron.d.ts, and that surface moves between majors, not patches —
+        # so the old list re-tested near-identical type definitions while
+        # covering nothing newer than 30.
         electron-version: [
-          "25.0.0", "25.9.8",  # Electron 25 LTS range
-          "26.0.0", "26.6.10", # Electron 26 range  
-          "27.0.0", "27.3.11", # Electron 27 range
-          "28.0.0", "28.3.3",  # Electron 28 range
-          "29.0.0", "29.4.6",  # Electron 29 range
-          "30.0.0"             # Latest Electron 30
+          "25.x",  # peerDependency floor
+          "28.x",
+          "31.x",
+          "34.x",
+          "37.x",
+          "40.x",
+          "43.x"   # current latest
         ]
         node-version: ["20.x"]
         
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
       - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -132,10 +139,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -201,10 +208,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -249,10 +256,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -294,7 +301,7 @@ jobs:
           "
           
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-package
           path: genai-key-storage-lite-*.tgz
