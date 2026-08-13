@@ -16,7 +16,7 @@ This directory contains the GitHub Actions workflows and configuration for autom
 - **`test`** - Runs the full test suite across all OS/Node combinations
 - **`lint-and-format`** - Code quality checks (ESLint, Prettier if available)
 - **`security-audit`** - npm security audit for vulnerabilities
-- **`test-electron-compatibility`** - Typechecks against Electron 25.x (peer floor), 39.x (dev target), 43.x (latest)
+- **`test-electron-compatibility`** - Typechecks against Electron 25.x (peer floor), 39.x (compatibility checkpoint), and 43.x (development target/latest)
 - **`package-validation`** - Validates package structure and exports
 - **`results-summary`** - Provides a comprehensive summary of all test results
 
