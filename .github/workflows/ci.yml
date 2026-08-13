@@ -117,8 +117,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        # One entry per major: the peerDependency floor, the version developed
-        # against, and current latest. Testing several patches inside a major
+        # One entry per major: the peerDependency floor, an intermediate
+        # compatibility checkpoint, and the version developed against/current
+        # latest. Testing several patches inside a major
         # buys nothing here — see the note on the build step below.
         electron-version: [25.x, 39.x, 43.x]
 
@@ -348,7 +349,7 @@ jobs:
           echo "**Test Matrix Coverage:**" >> $GITHUB_STEP_SUMMARY
           echo "- **Operating Systems**: Ubuntu, Windows, macOS" >> $GITHUB_STEP_SUMMARY
           echo "- **Node.js Versions**: 22.x, 24.x" >> $GITHUB_STEP_SUMMARY
-          echo "- **Electron Versions**: 25.x (peer floor), 39.x (dev target), 43.x (latest)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Electron Versions**: 25.x (peer floor), 39.x (compatibility checkpoint), 43.x (dev target/latest)" >> $GITHUB_STEP_SUMMARY
           echo "- **Total Test Combinations**: 19 (6 OS/Node + 9 OS/Electron + 4 validation jobs)" >> $GITHUB_STEP_SUMMARY
           
       - name: Set final status
