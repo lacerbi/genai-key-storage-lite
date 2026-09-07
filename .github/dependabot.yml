@@ -53,6 +53,14 @@ updates:
       # than on Dependabot's weekly schedule.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # TypeScript 7 and later cannot be installed while the test toolchain
+      # depends on ts-jest, whose peer range is typescript ">=4.3 <7". Any such
+      # bump fails at `npm ci` with ERESOLVE before a single file is compiled,
+      # so it says nothing about whether the source is ready for the new
+      # compiler. TypeScript 6 is inside the peer range and is deliberately
+      # left available. Drop this entry once ts-jest widens its peer range.
+      - dependency-name: "typescript"
+        versions: [">= 7"]
 
   # Enable security updates for GitHub Actions
   - package-ecosystem: "github-actions"
