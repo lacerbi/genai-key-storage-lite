@@ -178,6 +178,13 @@ const apiKeyService = new ApiKeyServiceRenderer(
 - **Security testing** including path traversal prevention
 - **Error handling validation** across all IPC boundaries
 - Test files co-located with source: `*.test.ts`
+- Tests compile under `tsconfig.test.json`, not `tsconfig.json`. The library
+  build excludes `*.test.ts`; the test config lifts that exclusion and adds
+  `jest` to the type packages so the test globals resolve. Compiler options
+  meant for tests belong in `tsconfig.test.json`
+- Both configs list their type packages explicitly in `types` rather than
+  relying on automatic inclusion of everything under `node_modules/@types`,
+  which not every supported compiler version performs
 
 **Running Tests:**
 
