@@ -78,7 +78,10 @@ jobs:
           && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         run: |
           echo "Attempting npm audit fix..."
-          if npm audit fix; then
+          # Without --audit-level, npm audit fix exits non-zero whenever any
+          # vulnerability remains, including moderate ones that only have a
+          # breaking (--force) fix
+          if npm audit fix --audit-level=high; then
             # Re-check audit after fix
             if npm audit --audit-level=high; then
               echo "fix_successful=true" >> "$GITHUB_OUTPUT"
@@ -89,7 +92,7 @@ jobs:
             fi
           else
             echo "fix_successful=false" >> "$GITHUB_OUTPUT"
-            echo "npm audit fix command itself failed"
+            echo "npm audit fix failed or left high/critical vulnerabilities"
           fi
 
       - name: Bump patch version
